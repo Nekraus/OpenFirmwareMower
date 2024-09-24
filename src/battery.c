@@ -1,8 +1,28 @@
 #include "gd32f30x.h"
 
+typedef enum 
+{
+    MODE_CS_IDLE,
+    MODE_CS_CHARGE,
+    MODE_DS,
+    MODE_MAX
+} battery_mode_e;
+
+typedef enum 
+{
+    CS_STATE_OFF,
+    CS_STATE_INIT,
+    CS_STATE_WAIT_NEXT_TRAME,
+    CS_STATE_WAIT_FIRST_BIT,
+    CS_STATE_READING
+} battery_CS_STATE_e;
+
+
 __IO uint32_t battery_u32StartTime_AnalogWDG = 0;
 __IO uint32_t battery_u32PulseTime_AnalogWDG = 0;
 __IO uint32_t battery_u32NbPulse = 0;
+
+__IO battery_CS_STATE_e battery_CSState = CS_STATE_OFF;
 
 const uint32_t battery_cu32TimeoutPulse = 750;
 const uint32_t battery_cu32WaitError = 50;
@@ -138,8 +158,10 @@ void BATTERY_ExtlineIRQ(void){
     \retval     none
 */
 void BATTERY_CSLogic(void){
-    
+    /* Set CS */
+
 }
+
 
 uint8_t BATTERY_Get_DS_State(uint16_t p_u16PC1, uint8_t p_u8TypeBattery)
 {
@@ -265,4 +287,64 @@ uint8_t battery_get_DS_State_old(uint16_t p_u16PC1, uint8_t p_u8TypeBattery)
         /*normal stat*/
         return 1;
     }
+}
+
+/*!
+    \brief  battery_Set_Mode(uint32_t mode);
+    all the logic to read the battery data on CS line
+    \param[in]  p_emode
+    \param[out] none
+    \retval     return code 
+*/
+int32_t battery_Set_Mode(battery_mode_e p_eMode)
+{   
+    int32_t l_s32Return = -1;
+    static battery_mode_e l_eCurrentMode = MODE_MAX;
+
+    if(p_eMode < MODE_MAX)
+    {
+        if(p_eMode != l_eCurrentMode){
+            timer_disable(TIMER2);
+            switch (p_eMode)
+            {
+            case MODE_CS_CHARGE:
+                battery_CSState = CS_STATE_OFF;
+                /* desactivate DS */
+                gpio_bit_reset(GPIOB, GPIO_PIN_6);
+                /* activate CS */
+                gpio_bit_set(GPIOB, GPIO_PIN_7);
+                break;
+            
+            case MODE_DS:
+                battery_u32NbPulse = 0;
+                battery_CSState = CS_STATE_OFF;
+                BATTERY_ActiveAnalogWatchdog();
+                exti_interrupt_disable(EXTI_8);
+                /* activate DS */
+                gpio_bit_set(GPIOB, GPIO_PIN_6);
+                /* desactivate CS */
+                gpio_bit_reset(GPIOB, GPIO_PIN_7);
+                break;
+
+            case MODE_CS_IDLE:
+            default:
+                BATTERY_DesactiveAnalogWatchdog();
+                exti_interrupt_disable(EXTI_8);
+                battery_CSState = CS_STATE_OFF;
+                /* desactivate DS */
+                gpio_bit_reset(GPIOB, GPIO_PIN_6);
+                /* activate CS */
+                gpio_bit_set(GPIOB, GPIO_PIN_7);
+                break;
+            }
+        }
+        l_eCurrentMode = p_eMode;
+        l_s32Return = 0; /* ok return*/
+    }
+    else
+    {
+        /* range error*/
+        l_s32Return = -2;
+    }
+    return l_s32Return;
 }
