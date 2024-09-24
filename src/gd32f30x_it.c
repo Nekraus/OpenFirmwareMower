@@ -104,6 +104,7 @@ void PendSV_Handler(void)
 void SysTick_Handler(void)
 {
     delay_decrement();
+    ticks_increment();
 }
 
 /*!
@@ -121,12 +122,12 @@ void ADC0_1_IRQHandler(void)
 }
 
 /*!
-    \brief      this function handles external lines 10 to 15 interrupt request
+    \brief      this function handles external lines 5 to 9 interrupt request
     \param[in]  none
     \param[out] none
     \retval     none
 */
-void EXTI10_15_IRQHandler(void)
+void EXTI5_9_IRQHandler(void)
 {
     if(RESET != exti_interrupt_flag_get(EXTI_8)) {
         exti_interrupt_flag_clear(EXTI_8);
@@ -145,6 +146,6 @@ void TIMER2_IRQHandler(void)
     // clear interrupt request to enable next run
     if (timer_interrupt_flag_get(TIMER2, TIMER_INT_FLAG_UP) != RESET) {
         timer_interrupt_flag_clear(TIMER2, TIMER_INT_FLAG_UP);
-         BATTERY_TimerIRQ();
+        BATTERY_TimerIRQ();
     }
 }

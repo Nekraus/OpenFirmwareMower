@@ -9,6 +9,7 @@
 #include "systick.h"
 
 volatile static uint32_t delay;
+volatile static uint32_t ticks;
 
 /*!
     \brief      configure systick
@@ -53,4 +54,24 @@ void delay_decrement(void)
     if (0U != delay){
         delay--;
     }
+}
+
+/*!
+    \brief      ticks_increment
+    \param[in]  none
+    \param[out] none
+    \retval     none
+*/
+void ticks_increment(void){
+    ticks++;
+}
+
+/*!
+    \brief      get_ticks
+    \param[in]  none
+    \param[out] none
+    \retval     ticks in ms
+*/
+uint32_t get_ticks(void){
+    return ticks;
 }

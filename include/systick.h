@@ -46,5 +46,9 @@ void systick_config(void);
 void delay_1ms(uint32_t count);
 /* delay decrement */
 void delay_decrement(void);
+/* increment ticks */
+void ticks_increment(void);
+/* get ticks */
+uint32_t get_ticks(void);
 
 #endif /* SYS_TICK_H */

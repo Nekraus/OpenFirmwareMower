@@ -1,4 +1,5 @@
 #include "gd32f30x.h"
+#include "systick.h"
 
 typedef enum 
 {
@@ -23,11 +24,18 @@ __IO uint32_t battery_u32PulseTime_AnalogWDG = 0;
 __IO uint32_t battery_u32NbPulse = 0;
 
 __IO battery_CS_STATE_e battery_CSState = CS_STATE_OFF;
+__IO uint32_t battery_u32StartTime_CS = 0;
+__IO uint32_t battery_u32StatusReceived = 0;
+__IO uint8_t  battery_pu8Status[5] = {0};
+__IO uint8_t  battery_u8StatusNbBit = 0;
 
 const uint32_t battery_cu32TimeoutPulse = 750;
 const uint32_t battery_cu32WaitError = 50;
 const uint32_t battery_cu32ReactivateWDG = 200;
 
+uint8_t battery_get_DS_State_new(uint16_t p_u16PC1, uint8_t p_u8TypeBattery);
+uint8_t battery_get_DS_State_old(uint16_t p_u16PC1, uint8_t p_u8TypeBattery);
+int32_t battery_Set_Mode(battery_mode_e p_eMode);
 
 /*!
     \brief      BATTERY init function
@@ -65,7 +73,7 @@ void BATTERY_init(void)
     /* configure TIMER base function */
     timer_parameter_struct timer_initpara;
 
-    timer_initpara.prescaler = clk_src / 1000 - 1; /*1Mhz*/
+    timer_initpara.prescaler = clk_src / 1000000 - 1; /*1Mhz*/
     timer_initpara.period = 499; /* 2kHz, 500 µs*/
     timer_initpara.repetitioncounter = 0;
     timer_initpara.clockdivision = TIMER_CKDIV_DIV1;
@@ -82,10 +90,10 @@ void BATTERY_init(void)
     /* enable the key clock */
     rcu_periph_clock_enable(RCU_GPIOB);
     /* configure button pin as input */
-    gpio_init(RCU_GPIOB, GPIO_MODE_IN_FLOATING, GPIO_OSPEED_50MHZ, GPIO_PIN_8);
+    gpio_init(GPIOB, GPIO_MODE_IN_FLOATING, GPIO_OSPEED_50MHZ, GPIO_PIN_8);
 
     /* connect key EXTI line to key GPIO pin */
-    gpio_exti_source_select(RCU_GPIOB, GPIO_PIN_8);
+    gpio_exti_source_select(GPIO_PORT_SOURCE_GPIOB, GPIO_PIN_SOURCE_8);
     /* configure key EXTI line */
     exti_init(EXTI_8, EXTI_INTERRUPT, EXTI_TRIG_FALLING);
     exti_interrupt_disable(EXTI_8);
@@ -103,7 +111,7 @@ void BATTERY_ActiveAnalogWatchdog(void)
 {
     if ((ADC_CTL0(ADC0) & ADC_CTL0_RWDEN) == 0)
     {
-        battery_u32StartTime_AnalogWDG = getTick();
+        battery_u32StartTime_AnalogWDG = get_ticks();
         battery_u32PulseTime_AnalogWDG = battery_u32StartTime_AnalogWDG;
 
         /* activate interrupt ADC interrupt */
@@ -136,7 +144,7 @@ void BATTERY_DesactiveAnalogWatchdog(void)
 */
 void BATTERY_AnalogWatchdogIRQ(void)
 {
-    battery_u32PulseTime_AnalogWDG = getTick();
+    battery_u32PulseTime_AnalogWDG = get_ticks();
     battery_u32NbPulse++;
 }
 /*!
@@ -147,20 +155,88 @@ void BATTERY_AnalogWatchdogIRQ(void)
     \retval     none
 */
 void BATTERY_ExtlineIRQ(void){
-    
+    if(battery_CSState == CS_STATE_INIT || battery_CSState == CS_STATE_WAIT_NEXT_TRAME){
+        /* if a trame is received, it will reset the timer autoreaload register until the end of the frame */
+        battery_CSState = CS_STATE_WAIT_NEXT_TRAME;
+        timer_counter_value_config(TIMER2, 0);
+        timer_autoreload_value_config(TIMER2, 49999);
+        timer_enable(TIMER2);
+    }
+    else if(battery_CSState == CS_STATE_WAIT_FIRST_BIT){
+        battery_CSState = CS_STATE_READING;
+        /* set Timer for the next bit, bit is detected if falling edge is detected or the timer elasps */
+        timer_counter_value_config(TIMER2, 0);
+        timer_interrupt_flag_clear(TIMER2, TIMER_INT_FLAG_UP);
+        timer_autoreload_value_config(TIMER2, 1040);
+        timer_enable(TIMER2);
+        uint8_t l_u8Bit = gpio_input_bit_get(GPIOB, GPIO_PIN_8);
+        battery_pu8Status[0] = (l_u8Bit & 0x01) << 7;
+        battery_u8StatusNbBit = 1;
+    }
+    else if(battery_CSState == CS_STATE_READING){
+        timer_counter_value_config(TIMER2, 0);
+        timer_interrupt_flag_clear(TIMER2, TIMER_INT_FLAG_UP);
+        uint8_t l_u8Bit = gpio_input_bit_get(GPIOB, GPIO_PIN_8);
+        /* divide by 8 (>>3) to get Bytes */
+        battery_pu8Status[(battery_u8StatusNbBit>>3)] |=(l_u8Bit & 0x01) << (7 - (battery_u8StatusNbBit & 7) & 0xff)  ;
+        battery_u8StatusNbBit ++;
+    }
+    else
+    {
+        /* nothing here */
+    }
 }
 
 /*!
-    \brief              BATTERY_CSLogic();
+    \brief BATTERY_ExtlineIRQ();
+    Need to be set in the Timer IRQ, function to read the UART stye data on CS
+    \param[in]  none
+    \param[out] none
+    \retval     none
+*/
+void BATTERY_TimerIRQ(void)
+{
+ if( battery_CSState == CS_STATE_WAIT_NEXT_TRAME)
+ {   
+    battery_CSState = CS_STATE_WAIT_FIRST_BIT;
+ }
+ else if(battery_CSState == CS_STATE_READING)
+ {
+    uint8_t l_u8Bit = gpio_input_bit_get(GPIOB, GPIO_PIN_8);
+    /* divide by 8 (>>3) to get Bytes */
+    battery_pu8Status[(battery_u8StatusNbBit>>3)] |=(l_u8Bit & 0x01) << (7 - (battery_u8StatusNbBit & 7) & 0xff) ;
+    battery_u8StatusNbBit ++;
+    if( 39 < battery_u8StatusNbBit )
+    {
+        battery_u32StatusReceived = 1;
+        battery_CSState = CS_STATE_WAIT_FIRST_BIT;
+        timer_disable(TIMER2);
+
+    }
+
+ }
+ else{
+    /* nothing here */
+ }
+}
+
+/*!
+    \brief              BATTERY_App();
     all the logic to read the battery data on CS line
     \param[in]  none
     \param[out] none
     \retval     none
 */
-void BATTERY_CSLogic(void){
+void BATTERY_App(void){
     /* Set CS */
-
+    battery_Set_Mode(MODE_CS_CHARGE);
+    if(battery_u32StatusReceived == 1){
+        battery_u32StatusReceived = 0;
+        printf("Bat Stat: %x%x %x%x\n", battery_pu8Status[3], battery_pu8Status[4], battery_pu8Status[1], battery_pu8Status[2]);
+    }
 }
+
+
 
 
 uint8_t BATTERY_Get_DS_State(uint16_t p_u16PC1, uint8_t p_u8TypeBattery)
@@ -181,7 +257,7 @@ uint8_t BATTERY_Get_DS_State(uint16_t p_u16PC1, uint8_t p_u8TypeBattery)
 
 uint8_t battery_get_DS_State_new(uint16_t p_u16PC1, uint8_t p_u8TypeBattery)
 {
-    uint32_t l_u32CurrentTime = getTick();
+    uint32_t l_u32CurrentTime = get_ticks();
     static uint32_t l_su32ReactiveWDG = 0;
     static uint32_t l_su32CntTimeout = 0;
     static uint32_t l_su32CntOverheat = 0;
@@ -214,7 +290,7 @@ uint8_t battery_get_DS_State_new(uint16_t p_u16PC1, uint8_t p_u8TypeBattery)
 
     if( (l_u32CurrentTime - l_su32ReactiveWDG) > battery_cu32ReactivateWDG)
     {
-        l_su32ReactiveWDG =l_u32CurrentTime;
+        l_su32ReactiveWDG = l_u32CurrentTime;
         BATTERY_ActiveAnalogWatchdog();
     }
 
@@ -308,7 +384,13 @@ int32_t battery_Set_Mode(battery_mode_e p_eMode)
             switch (p_eMode)
             {
             case MODE_CS_CHARGE:
-                battery_CSState = CS_STATE_OFF;
+                battery_CSState = CS_STATE_INIT;
+                battery_u32StartTime_CS = get_ticks();
+                battery_u32StatusReceived = 0;
+                BATTERY_DesactiveAnalogWatchdog();
+                exti_interrupt_disable(EXTI_8);
+                exti_interrupt_flag_clear(EXTI_8);
+                exti_interrupt_enable(EXTI_8);
                 /* desactivate DS */
                 gpio_bit_reset(GPIOB, GPIO_PIN_6);
                 /* activate CS */

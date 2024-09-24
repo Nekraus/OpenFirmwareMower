@@ -86,12 +86,11 @@ int main(void)
     gpio_bit_set(GPIOE, GPIO_PIN_11);
 
 
-    /*activate DS*/
-    gpio_bit_set(GPIOB, GPIO_PIN_6);
-    /* desactivate CS*/
-    gpio_bit_reset(GPIOB, GPIO_PIN_7);
+    BATTERY_init();
 
     while(1){
+
+        BATTERY_App();
         /* not used on the original firmware PA0 is linked to the charger input voltage*/
         adc_value[0]=adc0_channel_sample(ADC_CHANNEL_0);
         adc_value[1]=adc0_channel_sample(ADC_CHANNEL_1);
@@ -140,6 +139,7 @@ void rcu_config(void)
     rcu_periph_clock_enable(RCU_GPIOA);
     /* enable ADC clock */
     rcu_periph_clock_enable(RCU_ADC0);
+    rcu_periph_clock_enable(RCU_ADC2);
     /* config ADC clock */
     rcu_adc_clock_config(RCU_CKADC_CKAPB2_DIV6);
 }
