@@ -25,12 +25,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
 OF SUCH DAMAGE.
 */
 
-#include "gd32f30x.h"
-#include "gd32f30x_it.h"
-#include "systick.h"
-#include <stdio.h>
-
-
+#include "main.h"
 
 __IO uint16_t adc_value[10];
 
