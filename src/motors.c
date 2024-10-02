@@ -20,13 +20,19 @@ typedef enum {
     MOTORS_SELECT_MAX
 } MOTORS_SELECT_e;
 
-typedef struct {
-uint16_t u16Header;
-uint8_t u8Motor_id;
-int16_t s16Speed;
-uint16_t u16Voltage;
+typedef enum {
+    MOTORS_CMDID_TICKS = 0x00,
+    MOTORS_CMDID_SPEED = 0x02,
+    MOTORS_CMDID_CURRENT = 0x03,
+    MOTORS_SELECT_STOP = 0x05,
+} MOTORS_CMDID_e;
 
-} motor_speed_tx_t;
+
+typedef struct {
+uint8_t u8Motor_id;
+uint8_t u8Cmd_id;
+uint8_t pu8Data[6];
+} motor_msg_tx_t;
 /* +-----------------------------------------------------------------------+ */
 /* |                        CONSTANTES / MACROS                            | */
 /* +-----------------------------------------------------------------------+ */
@@ -48,6 +54,7 @@ uint8_t rxbuffer[RX_SIZE];
 /* |                         Prototype FUNCTIONS                              | */
 /* +-----------------------------------------------------------------------+ */
 void motors_selectMotor(MOTORS_SELECT_e p_eSelectedMotor);
+uint8_t motors_Calculatechecksum(uint8_t* p_pu8Buffer);
 void motors_prepareInit_1(MOTORS_SELECT_e p_eSelectedMotor, uint8_t* p_data);
 void motors_prepareInit_2(MOTORS_SELECT_e p_eSelectedMotor, uint8_t* p_data);
 void motors_prepareInit_3(MOTORS_SELECT_e p_eSelectedMotor, uint8_t* p_data);
@@ -129,10 +136,10 @@ void MOTORS_Init(void)
     dma_channel_enable(DMA0, DMA_CH5);
     /* enable USART DMA for transmission */
     usart_dma_transmit_config(USART1, USART_DENT_ENABLE);
-    /* enable DMA0 channel3 transfer complete interrupt */
-    dma_interrupt_enable(DMA0, DMA_CH6, DMA_INT_FTF);
-    /* enable DMA0 channel3 */
-    dma_channel_enable(DMA0, DMA_CH6);
+    // /* enable DMA0 channel3 transfer complete interrupt */
+    // dma_interrupt_enable(DMA0, DMA_CH6, DMA_INT_FTF);
+    // /* enable DMA0 channel3 */
+    // dma_channel_enable(DMA0, DMA_CH6);
 
     /* Mux Control */
     gpio_init(GPIOE, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_7);
@@ -159,13 +166,61 @@ void motors_selectMotor(MOTORS_SELECT_e p_eSelectedMotor){
 }
 
 /*!
+    \brief   motors_SendSpeedCmd
+    Send Speed command to motors Drivers 
+    \param[in]  int16_t p_s16Speed
+    \param[in]  int16_t p_s16Voltage
+    \param[out] none
+    \retval     SUCCESS FAILED
+*/
+void motors_motors_SendSpeedCmd(MOTORS_SELECT_e p_eSelectedMotor, int16_t p_s16Speed, int16_t p_s16Voltage){
+    motor_msg_tx_t tmp;
+    if(p_eSelectedMotor < MOTORS_SELECT_MAX){
+        tmp.u8Motor_id = p_eSelectedMotor;
+        tmp.u8Cmd_id = MOTORS_CMDID_SPEED;
+        tmp.pu8Data[2] = (uint8_t)(p_s16Voltage >> 8) ;
+        tmp.pu8Data[3] = (uint8_t)(p_s16Voltage & 0x00FF) ;
+        tmp.pu8Data[4] = (uint8_t)(p_s16Speed >> 8) ;
+        tmp.pu8Data[5] = (uint8_t)(p_s16Speed & 0x00FF) ;
+        motors_SendMsg(&tmp);
+}
+
+/*!
+    \brief   motors_SendMsg
+    take the msg add headers and CRC and send by DMA to UART
+    \param[in]  motor_msg_tx_t p_psMsg
+    \param[out] none
+    \retval     SUCCESS FAILED
+*/
+void motors_SendMsg(motor_msg_tx_t* p_psMsg){
+    if(p_psMsg == NULL){
+        return -1;
+    }
+    else{
+        txbuffer[0]  = 0xD5;
+        txbuffer[1]  = 0xE5;
+        txbuffer[2]  = p_psMsg->u8Motor_id;
+        txbuffer[3]  = p_psMsg->pu8Data[2];
+        txbuffer[4]  = p_psMsg->u8Cmd_id;
+        txbuffer[5]  = p_psMsg->pu8Data[3];
+        txbuffer[6]  = motors_Calculatechecksum(p_psMsg->pu8Data);
+        txbuffer[7]  = p_psMsg->pu8Data[4];
+        txbuffer[8]  = p_psMsg->pu8Data[0];
+        txbuffer[9]  = p_psMsg->pu8Data[5];
+        txbuffer[10] = p_psMsg->pu8Data[1];
+        usart_data_transmit
+        return 0;
+    }
+}
+
+/*!
     \brief   void motors_Calculatechecksum(uint8_t* p_pu8Buffer)
     Calculate the CRC for UART communication 
     \param[in]  uint8_t* p_pu8Buffer buffer to send or received 
     \param[out] none
     \retval     u8 CRC
 */
-void motors_Calculatechecksum(uint8_t* p_pu8Buffer){
+uint8_t motors_Calculatechecksum(uint8_t* p_pu8Buffer){
     if(p_pu8Buffer == NULL){
         return 0;
     }
