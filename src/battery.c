@@ -229,7 +229,7 @@ void BATTERY_TimerIRQ(void)
 */
 void BATTERY_App(void){
     /* Set CS */
-    battery_Set_Mode(MODE_CS_CHARGE);
+    battery_Set_Mode(MODE_DS);
     if(battery_u32StatusReceived == 1){
         battery_u32StatusReceived = 0;
         printf("Bat Stat: %x%x %x%x\n", battery_pu8Status[3], battery_pu8Status[4], battery_pu8Status[1], battery_pu8Status[2]);

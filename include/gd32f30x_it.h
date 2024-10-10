@@ -64,4 +64,6 @@ void ADC0_1_IRQHandler(void);
 /* this function handles external lines 10 to 15 interrupt request */
 void EXTI10_15_IRQHandler(void);
 
+void  DMA0_Channel5_IRQHandler(void);
+
 #endif /* GD32F30X_IT_H */

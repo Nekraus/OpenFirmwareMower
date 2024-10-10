@@ -30,4 +30,6 @@ void MOTORS_Init(void);
 /* App Motors drivers*/
 void MOTORS_App(void);
 
+void MOTORS_DMARxIRQ(void);
+
 #endif /* MOTORS_H_ */

@@ -82,10 +82,12 @@ int main(void)
 
 
     BATTERY_init();
+    MOTORS_Init();
 
     while(1){
 
         BATTERY_App();
+        MOTORS_App();
         /* not used on the original firmware PA0 is linked to the charger input voltage*/
         adc_value[0]=adc0_channel_sample(ADC_CHANNEL_0);
         adc_value[1]=adc0_channel_sample(ADC_CHANNEL_1);
@@ -99,26 +101,27 @@ int main(void)
         adc_value[9]=adc2_channel_sample(ADC_CHANNEL_6);
 
 
-        printf("Charger Voltage: %d (%1.2fV)\n", adc_value[0], adc_value[0]* 6.0 * 3.3f / 4095.f);
-        printf("Temperature : %d (%1.2fV)\n", adc_value[1], adc_value[1] * 3.3f / 4095.f);
+        // printf("Charger Voltage: %d (%1.2fV)\n", adc_value[0], adc_value[0]* 6.0 * 3.3f / 4095.f);
+        // printf("Temperature : %d (%1.2fV)\n", adc_value[1], adc_value[1] * 3.3f / 4095.f);
         printf("Battery Voltage: %d (%1.2fV)\n", adc_value[2], adc_value[2] * 10 * 3.3f / 4095.f);
-        printf(" DS: %d (%1.2fV)\n", adc_value[3], adc_value[3] * 3.3f / 4095.f);
-        printf(" DS bis: %d (%1.2fV)\n", adc_value[7], adc_value[7] * 3.3f / 4095.f);
+        // printf(" DS: %d (%1.2fV)\n", adc_value[3], adc_value[3] * 3.3f / 4095.f);
+        // printf(" DS bis: %d (%1.2fV)\n", adc_value[7], adc_value[7] * 3.3f / 4095.f);
         printf(" Discharge current: %d (%1.2fV)\n", adc_value[4], adc_value[4] * 3.3f / 4095.f /5.f/0.025f);
-        printf(" Charge current: %d (%1.2fV)\n", adc_value[5], adc_value[5] * 3.3f / 4095.f /20.f/0.025f);
+        // printf(" Charge current: %d (%1.2fV)\n", adc_value[5], adc_value[5] * 3.3f / 4095.f /20.f/0.025f);
         printf(" Mower Motor current: %d (%1.2fV)\n", adc_value[6], adc_value[6] * 3.3f / 4095.f /0.24f);
-        printf(" Right Motor current: %d (%1.2fV)\n", adc_value[7], adc_value[7] * 3.3f / 4095.f /0.24f);
-        printf(" Left Motor current: %d (%1.2fV)\n", adc_value[8], adc_value[8] * 3.3f / 4095.f /0.24f);
-        printf("\n");
+        printf(" Right Motor current: %d (%1.2fV)\n", adc_value[8], adc_value[8] * 3.3f / 4095.f /0.24f);
+        printf(" Left Motor current: %d (%1.2fV)\n", adc_value[9], adc_value[9] * 3.3f / 4095.f /0.24f);
+        // printf("\n");
 
-
-        //gpio_bit_reset(GPIOG, GPIO_PIN_10);
-
-        delay_1ms(500);
-        /* led blinky*/
-        gpio_bit_reset(GPIOF, GPIO_PIN_11);
-        delay_1ms(500);
-        gpio_bit_set(GPIOF, GPIO_PIN_11);
+        if(gpio_input_bit_get(GPIOG, GPIO_PIN_3) == RESET){
+            gpio_bit_reset(GPIOG, GPIO_PIN_10);
+        }
+ 
+        // delay_1ms(500);
+        // /* led blinky*/
+        // gpio_bit_reset(GPIOF, GPIO_PIN_11);
+        // delay_1ms(500);
+        // gpio_bit_set(GPIOF, GPIO_PIN_11);
     } 
 }
 
@@ -168,6 +171,8 @@ void gpio_config(void)
     gpio_init(GPIOG, GPIO_MODE_OUT_PP, GPIO_OSPEED_10MHZ, GPIO_PIN_10);
     gpio_init(GPIOE, GPIO_MODE_OUT_PP, GPIO_OSPEED_10MHZ, GPIO_PIN_11 | GPIO_PIN_13 | GPIO_PIN_14);
     gpio_init(GPIOF, GPIO_MODE_OUT_PP, GPIO_OSPEED_10MHZ, GPIO_PIN_11 | GPIO_PIN_12);
+
+    gpio_init(GPIOG, GPIO_MODE_IN_FLOATING, GPIO_OSPEED_10MHZ, GPIO_PIN_3| GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7);
 }
 
 /*!

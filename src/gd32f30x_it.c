@@ -149,3 +149,18 @@ void TIMER2_IRQHandler(void)
         BATTERY_TimerIRQ();
     }
 }
+
+/*!
+    \brief      this function handles DMA_Channel5_IRQHandler interrupt
+    \param[in]  none
+    \param[out] none
+    \retval     none
+*/
+void  DMA0_Channel5_IRQHandler(void)
+{
+    if(RESET != dma_interrupt_flag_get(DMA0, DMA_CH5, DMA_INT_FLAG_FTF)) {
+        dma_interrupt_flag_clear(DMA0, DMA_CH5, DMA_INT_FLAG_G);
+        MOTORS_DMARxIRQ();
+    }
+
+}
