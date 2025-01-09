@@ -83,6 +83,7 @@ int main(void)
 
     BATTERY_init();
     MOTORS_Init();
+    DISPLAY_Init();
 
     while(1){
 
