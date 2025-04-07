@@ -30,6 +30,15 @@ char* world = "World";
 /* +-----------------------------------------------------------------------+ */
 /* |                         Prototype FUNCTIONS                           | */
 /* +-----------------------------------------------------------------------+ */
+void display_send_cmd(uint8_t p_u8Cmd);
+void display_send_data(uint8_t p_u8data);
+void display_setCursor( uint8_t p_u8Line, uint8_t p_u8Col);
+void display_writeCharLineColum(char p_u8Char, uint8_t p_u8Line, uint8_t p_u8Col);
+void display_writeStringLineColumn(char* p_u8String, uint8_t p_u8Line, uint8_t p_u8Col);
+
+uint8_t display_readData(void);
+uint8_t display_readGPIOD(void);
+bool write_then_readLCD(int param_1);
 
 /* +-----------------------------------------------------------------------+ */
 /* |                         PUBLIC FUNCTIONS                              | */
@@ -46,21 +55,21 @@ void DISPLAY_Init(void){
     rcu_periph_clock_enable(RCU_GPIOB);
     rcu_periph_clock_enable(RCU_GPIOD);
 
-    /*PA11 -> VE ?? PA12 -> LED + ??*/
-    gpio_init(GPIOA, GPIO_MODE_OUT_PP, GPIO_OSPEED_MAX, GPIO_PIN_11 | GPIO_PIN_12);
+    /*PA11 -> CS1 ?? PA12 -> CS2??*/
+    gpio_init(GPIOA, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_11);
     gpio_bit_reset(GPIOA, GPIO_PIN_11);
 
-    /* PB12?? PB13 -> RS PB14-> Read/Write PB15 -> E */
-    gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_MAX, GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15);
+    /* PB12 -> Reset, PB13 -> RS PB14-> Read/Write PB15 -> E */
+    gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15);
 
-    gpio_init(GPIOD, GPIO_MODE_OUT_PP, GPIO_OSPEED_MAX, GPIO_PIN_8 |GPIO_PIN_9 |GPIO_PIN_10|GPIO_PIN_11| \
-                                                        GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15);
+    gpio_init(GPIOD, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, \ 
+        GPIO_PIN_8 |GPIO_PIN_9 |GPIO_PIN_10|GPIO_PIN_11| \
+        GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15);
 
-    
     delay_1ms(5);
-    gpio_bit_reset(GPIOA, GPIO_PIN_12);
+    gpio_bit_reset(GPIOB, GPIO_PIN_12);
     delay_1ms(20);
-    gpio_bit_set(GPIOA, GPIO_PIN_12);
+    gpio_bit_set(GPIOB, GPIO_PIN_12);
     delay_1ms(20);
     /* Function Set 8 bit 2 lines */
     display_send_cmd(0x39);
@@ -86,6 +95,14 @@ void DISPLAY_Init(void){
     display_send_cmd(6);
     delay_1ms(10);
 
+    // int i;
+    // for (i = 0; i < 256; i++) {
+    //     if (write_then_readLCD(i & 0xff)) {
+    //         printf("fuck");
+    //     }
+    // }
+    gpio_bit_reset(GPIOA,GPIO_PIN_11);
+
     display_writeStringLineColumn(hello,0,0);
     display_writeStringLineColumn(world,1,0);
 
@@ -101,7 +118,7 @@ void display_send_cmd(uint8_t p_u8Cmd){
     /* Set PB15 E */
     gpio_bit_set(GPIOB, GPIO_PIN_15);
     /* send Data */
-    gpio_port_write(GPIOD, p_u8Cmd<<8 );
+    gpio_bit_set(GPIOD, ~p_u8Cmd<<24 |p_u8Cmd<<8 );
     /*todo change wait*/
     delay_1ms(1);
     gpio_bit_reset(GPIOB, GPIO_PIN_15);
@@ -115,7 +132,7 @@ void display_send_data(uint8_t p_u8data){
     /* Set PB13 RS PB15 E */
     gpio_bit_set(GPIOB, GPIO_PIN_13 | GPIO_PIN_15);
     /* send Data */
-    gpio_port_write(GPIOD, p_u8data<<8 );
+    gpio_bit_set(GPIOD, ~p_u8data<<24 | p_u8data<<8 );
     /*todo change wait*/
     delay_1ms(1);
     gpio_bit_reset(GPIOB, GPIO_PIN_15);
@@ -132,7 +149,7 @@ void display_setCursor( uint8_t p_u8Line, uint8_t p_u8Col){
   if ((p_u8Line & 1) != 0) {
     l_u8tmp = l_u8tmp + 0x40;
   }
-  display_send_cmd(l_u8tmp);
+  display_send_cmd(l_u8tmp | 0x80);
 }
 
 void display_writeCharLineColum(char p_u8Char, uint8_t p_u8Line, uint8_t p_u8Col){
@@ -142,7 +159,60 @@ void display_writeCharLineColum(char p_u8Char, uint8_t p_u8Line, uint8_t p_u8Col
 
 void display_writeStringLineColumn(char* p_u8String, uint8_t p_u8Line, uint8_t p_u8Col){
     display_setCursor(p_u8Line, p_u8Col);
-    while(p_u8String != '/0'){
+    while(*p_u8String != '\0'){
          display_send_data(*p_u8String++);
     }
+}
+
+bool write_then_readLCD(int param_1)
+{
+    uint8_t l_u8Data = 0;
+    bool l_bReturn = false;
+
+    delay_1ms(100);
+    gpio_bit_reset(GPIOA, GPIO_PIN_11);
+    /* return HOME */
+    display_send_cmd(2);
+    /* Function Set 8 bits , 2 lines */
+    display_send_cmd(0x38);
+    /* Set CGRAM address */
+    display_send_cmd(0x40);
+    display_send_data(param_1);
+    gpio_bit_set(GPIOA, GPIO_PIN_11);
+    __NOP();
+    gpio_bit_reset(GPIOA, GPIO_PIN_11);
+    display_send_cmd(2);
+    display_send_cmd(0x38);
+    display_send_cmd(0x40);
+    display_readData();
+    l_u8Data = display_readData();
+    if (l_u8Data != param_1) {
+    l_bReturn = true;
+    }
+    gpio_bit_set(GPIOA, GPIO_PIN_11);
+    return l_bReturn;
+}
+
+uint8_t display_readData(void)
+{
+    uint8_t l_u8Return;
+    gpio_bit_set(GPIOB,GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15);
+    l_u8Return = display_readGPIOD();
+    delay_1ms(1);
+    gpio_bit_reset(GPIOB,GPIO_PIN_15);
+    delay_1ms(1);
+    return l_u8Return;
+}
+
+uint8_t display_readGPIOD(void)
+{
+    uint16_t l_u16DataGPIOD = 0;
+    gpio_init(GPIOD, GPIO_MODE_IN_FLOATING, GPIO_OSPEED_MAX, \
+        GPIO_PIN_8 |GPIO_PIN_9 |GPIO_PIN_10|GPIO_PIN_11| \
+        GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15);
+    l_u16DataGPIOD = gpio_input_port_get(GPIOD);
+    gpio_init(GPIOD, GPIO_MODE_OUT_PP, GPIO_OSPEED_MAX, \
+    GPIO_PIN_8 |GPIO_PIN_9 |GPIO_PIN_10|GPIO_PIN_11| \
+    GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15);
+    return (uint8_t)(l_u16DataGPIOD>>8);
 }

@@ -1,19 +1,12 @@
 /*
- * main.h
+ * eeprom.h 
  *
- *  Created on: 25 septembre 2024
- *      Author: Bruno Lecornu
+ *  Created on: 31/03/2025 
+ *      Author: Bruno Lecornu 
  */
 
-#ifndef MAIN_H_
-#define MAIN_H_
-
-#include "gd32f30x.h"
-#include "gd32f30x_it.h"
-#include "systick.h"
-#include <stdio.h>
-#include <stdbool.h>
-
+#ifndef EEPROM_H
+#define EEPROM_H
 /* +-----------------------------------------------------------------------+ */
 /* |                        CONSTANTES / MACROS                            | */
 /* +-----------------------------------------------------------------------+ */
@@ -30,5 +23,4 @@
 /* |                         PUBLIC FUNCTIONS                              | */
 /* +-----------------------------------------------------------------------+ */
 
-
-#endif /* MAIN_H_ */
+#endif /* EEPROM_H*/

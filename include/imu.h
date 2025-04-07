@@ -1,19 +1,13 @@
 /*
- * main.h
+ * imu.h 
  *
- *  Created on: 25 septembre 2024
- *      Author: Bruno Lecornu
+ *  Created on: 31/03/2025 
+ *      Author: Bruno Lecornu 
  */
 
-#ifndef MAIN_H_
-#define MAIN_H_
-
-#include "gd32f30x.h"
-#include "gd32f30x_it.h"
-#include "systick.h"
-#include <stdio.h>
-#include <stdbool.h>
-
+#ifndef IMU_H
+#define IMU_H
+#include "main.h"
 /* +-----------------------------------------------------------------------+ */
 /* |                        CONSTANTES / MACROS                            | */
 /* +-----------------------------------------------------------------------+ */
@@ -21,7 +15,15 @@
 /* +-----------------------------------------------------------------------+ */
 /* |                            TYPEDEFS                                   | */
 /* +-----------------------------------------------------------------------+ */
-
+typedef struct {
+    float ax;
+    float ay;
+    float az;
+    float gx;
+    float gy;
+    float gz;
+    float temp;
+}imu_data_t;
 /* +-----------------------------------------------------------------------+ */
 /* |                         GLOBAL VARIABLES                              | */
 /* +-----------------------------------------------------------------------+ */
@@ -29,6 +31,6 @@
 /* +-----------------------------------------------------------------------+ */
 /* |                         PUBLIC FUNCTIONS                              | */
 /* +-----------------------------------------------------------------------+ */
-
-
-#endif /* MAIN_H_ */
+void IMU_Init(void);
+void IMU_getData(imu_data_t* data);
+#endif /* IMU_H*/

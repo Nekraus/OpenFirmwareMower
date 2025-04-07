@@ -84,11 +84,12 @@ int main(void)
     BATTERY_init();
     MOTORS_Init();
     DISPLAY_Init();
+    IMU_Init();
 
     while(1){
 
         BATTERY_App();
-        MOTORS_App();
+       // MOTORS_App();
         /* not used on the original firmware PA0 is linked to the charger input voltage*/
         adc_value[0]=adc0_channel_sample(ADC_CHANNEL_0);
         adc_value[1]=adc0_channel_sample(ADC_CHANNEL_1);
