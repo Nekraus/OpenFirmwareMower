@@ -211,7 +211,6 @@ void BATTERY_TimerIRQ(void)
         battery_u32StatusReceived = 1;
         battery_CSState = CS_STATE_WAIT_FIRST_BIT;
         timer_disable(TIMER2);
-
     }
 
  }
@@ -234,10 +233,30 @@ void BATTERY_App(void){
         battery_u32StatusReceived = 0;
         printf("Bat Stat: %x%x %x%x\n", battery_pu8Status[3], battery_pu8Status[4], battery_pu8Status[1], battery_pu8Status[2]);
     }
+
+    /* Set global current in function charger state*/
+    /* Charger logic */
+    /* Monitoring */
 }
 
 
+uint8_t BATTERY_Monitoring(int32_t p_u32Voltage, int32_t p_u32Current, uint8_t p_u8Type, uint16_t p_u16Status){
 
+    /* overcurrent detection >9A ,1s,>20A,600ms,>50A,150ms */
+
+    /* undervoltage detection 14,629V, stop to 16,970V */
+
+    /* check battery type */
+
+    /* overvoltage detection during charge >21V*/
+
+    /* check battery status only during charge */
+
+    /* overcurrent detection during charge >4a, 3,5s*/
+
+    /* battery low voltage during charge <11,8V, 3,5s and status 0x11c3*/
+
+}
 
 uint8_t BATTERY_Get_DS_State(uint16_t p_u16PC1, uint8_t p_u8TypeBattery)
 {
