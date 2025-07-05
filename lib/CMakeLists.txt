@@ -1,0 +1,1 @@
+add_subdirectory(GD32F30x_Firmware)
