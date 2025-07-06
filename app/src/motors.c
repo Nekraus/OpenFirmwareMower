@@ -57,7 +57,7 @@ void motors_selectMotor(MOTORS_SELECT_e p_eSelectedMotor);
 void motors_motors_SendSpeedCmd(MOTORS_SELECT_e p_eSelectedMotor, int16_t p_s16Speed, int16_t p_s16Voltage);
 void motors_SendBrakeCmd(MOTORS_SELECT_e p_eSelectedMotor);
 void motors_SendAskCurrentCmd(MOTORS_SELECT_e p_eSelectedMotor);
-uint8_t motors_SendMsg(motor_msg_tx_t* p_psMsg);
+int8_t motors_SendMsg(motor_msg_tx_t* p_psMsg);
 uint8_t motors_Calculatechecksum(motor_msg_tx_t* p_psMsg);
 void motors_prepareInit_1(MOTORS_SELECT_e p_eSelectedMotor);
 void motors_prepareInit_2(MOTORS_SELECT_e p_eSelectedMotor);

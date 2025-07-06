@@ -28,6 +28,12 @@
 /* +-----------------------------------------------------------------------+ */
 /* |                         Prototype FUNCTIONS                           | */
 /* +-----------------------------------------------------------------------+ */
+void imu_init_hard(void);
+void imu_init_component(void);
+void imu_read(uint8_t p_u8Cmd, uint32_t p_u32Size, uint8_t *p_pu8Data);
+void imu_write(uint8_t p_u8Cmd, uint32_t p_u32Size, uint8_t *p_pu8Data);
+void imu_cmd_readBytes(uint8_t p_u8Cmd, uint32_t p_u32Size, uint8_t *p_pu8Data);
+void imu_cmd_writeBytes(uint8_t p_u8Cmd, uint32_t p_u32Size, uint8_t *p_pu8Data);
 uint8_t spi2_readwrite(uint8_t byte);
 /* +-----------------------------------------------------------------------+ */
 /* |                         PUBLIC FUNCTIONS                              | */
@@ -79,7 +85,7 @@ void imu_init_hard(void){
 void imu_init_component(void){
     uint8_t cmd[] ={0xc0,0xd3,0xc2,0xc0,0xd3,0xc2,0xd3,0xd5,0xd3,0xd5,0xd4,0xd4,0xbb,0xb9,0xba,0xbb,0xb9,0xba};
     uint8_t data[]={0x38,0x16,0x10,0x3e,0x12,0x20,0x11,0x02,0x12,0x00,0x08,0x00,0x18,0x18,0x18,0x00,0x00,0x00};
-    uint16_t tmp; 
+    uint8_t tmp; 
     uint32_t index = 0;
 
 
@@ -136,18 +142,18 @@ void imu_init_component(void){
     delay_1ms(10);
     
     imu_read(0x22,1,&tmp);
-    tmp = tmp & 0xff | 1;
+    tmp = (tmp & 0xff) | 1;
     imu_write(0x22,1,&tmp);
     tmp = 0x03;
     imu_write(0x23,1,&tmp);
     tmp = 0x04;
     imu_write(0x25,1,&tmp);
     imu_read(0x26,1,&tmp);
-    tmp = tmp & 0x17 + 0x20;
+    tmp = (tmp & 0x17) + 0x20;
     imu_write(0x26,1,&tmp);
 
     imu_read(0x28,1,&tmp);
-    tmp = tmp & 0xff | 1;
+    tmp = (tmp & 0xff) | 1;
     imu_write(0x28,1,&tmp);
     tmp = 0x03;
     imu_write(0x29,1,&tmp);
@@ -158,11 +164,11 @@ void imu_init_component(void){
     tmp = 0x03;
     imu_write(0xaf,1,&tmp);
     imu_read(0x2b,1,&tmp);
-    tmp = 0x0c | tmp & 0xe3 ;
+    tmp = 0x0c | (tmp & 0xe3) ;
     imu_write(0x28,1,&tmp);
 
     imu_read(0x20,1,&tmp);
-    tmp = 0x30 | 0x80 | tmp & 0x4f ;
+    tmp = 0x30 | 0x80 | (tmp & 0x4f) ;
     imu_write(0x20,1,&tmp);
 
     imu_read(0xdf,1,&tmp);
@@ -178,13 +184,13 @@ void imu_init_component(void){
     volatile float temp_f = 0.0;
 
     int16_t* p_tmp;
-    volatile float acc_x = 0.0;
-    volatile float acc_y = 0.0;
-    volatile float acc_z = 0.0;
+    volatile float acc_x = 0.0f;
+    volatile float acc_y = 0.0f;
+    volatile float acc_z = 0.0f;
 
-    volatile float gyro_x = 0.0;
-    volatile float gyro_y = 0.0;
-    volatile float gyro_z = 0.0;
+    volatile float gyro_x = 0.0f;
+    volatile float gyro_y = 0.0f;
+    volatile float gyro_z = 0.0f;
 
     imu_read(0x20,2,&tmp);
     temp1 = ((tmp&0x000F)<<8);
@@ -194,31 +200,31 @@ void imu_init_component(void){
     temp = temp2 - temp1;
 
     temp_f = (float)temp;
-    temp_f /= 16.0;
-    temp_f += 25.0;
+    temp_f /= 16.0f;
+    temp_f += 25.0f;
 while(0){
     /* read acc and gyro*/
-    imu_read(0x00,12,acc);
+    imu_read(0x00,12,(uint8_t*)acc);
     /*acc div by 8192 
     div by calibration data ?
      x9.8
      so m/s2? */
      p_tmp = (int16_t*)&acc[0] ;
-     acc_x = (float)*p_tmp / 8192.0 *9.8;
+     acc_x = (float)*p_tmp / 8192.0f *9.8f;
      p_tmp = (int16_t*)&acc[1] ;
-     acc_y = (float)*p_tmp / 8192.0 *9.8;
+     acc_y = (float)*p_tmp / 8192.0f *9.8f;
      p_tmp = (int16_t*)&acc[2] ;
-     acc_z = (float)*p_tmp / 8192.0 *9.8;
+     acc_z = (float)*p_tmp / 8192.0f *9.8f;
 /* gyro  div by 131.1
 multi by Pi
 div by 180
 so °/s ?*/
     p_tmp = (int16_t*)&acc[3] ;
-    gyro_x = (float)*p_tmp / 131.1 * 3.14 / 180.0;
+    gyro_x = (float)*p_tmp / 131.1f * 3.14f / 180.0f;
     p_tmp = (int16_t*)&acc[4] ;
-    gyro_y = (float)*p_tmp / 131.1 * 3.14 / 180.0;
+    gyro_y = (float)*p_tmp / 131.1f * 3.14f / 180.0f;
     p_tmp = (int16_t*)&acc[5] ;
-    gyro_z = (float)*p_tmp / 131.1 * 3.14 / 180.0;
+    gyro_z = (float)*p_tmp / 131.1f * 3.14f / 180.0f;
     delay_1ms(10);
 }
 }

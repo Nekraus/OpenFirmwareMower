@@ -44,7 +44,7 @@
 
 /* define GD32F30x */
 #if !defined (GD32F30X_HD) && !defined (GD32F30X_XD) && !defined (GD32F30X_CL)
-  /* #define GD32F30X_HD */
+  #define GD32F30X_HD 
   /* #define GD32F30X_XD */
   /* #define GD32F30X_CL */
 #endif /* define GD32F30x */

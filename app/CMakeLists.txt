@@ -8,10 +8,12 @@ set(SOURCES
     src/main.c
     src/motors.c
     src/systick.c
+    src/system_gd32f30x.c
+    src/newlib_nano.c
 )
 
 add_executable(gd32_openfirmwaremower
-    startup/startup_gd32f30x_hd.s
+    startup/startup_gd32f30x_hd.S
     ${SOURCES}
 )
 
@@ -24,6 +26,6 @@ target_include_directories(gd32_openfirmwaremower
         include/
 )
 
-set_target_linker(gd32_openfirmwaremower startup/gnu/GD32F303ZE.ld)
+set_target_linker(gd32_openfirmwaremower /home/nekraus/OpenFirmwareMower/app/startup/GD32F303ZE.ld)
 
 post_build(gd32_openfirmwaremower)
