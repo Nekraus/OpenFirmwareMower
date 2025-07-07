@@ -1,4 +1,5 @@
 set(SOURCES
+    startup/tx_initialize_low_level.S
     src/battery.c
     src/digitalIO.c
     src/display.c
@@ -18,6 +19,7 @@ add_executable(gd32_openfirmwaremower
 )
 
 target_link_libraries(gd32_openfirmwaremower
+    azrtos::threadx
     gd32f30x
 )
 

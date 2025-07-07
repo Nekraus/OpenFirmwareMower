@@ -25,13 +25,18 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
 OF SUCH DAMAGE.
 */
 
-#include "main.h"
-#include "digitalIO.h"
-#include "display.h"
-#include "eeprom.h"
-#include "imu.h"
-#include "motors.h"
-#include "battery.h"
+#include "../include/main.h"
+#include "../include/digitalIO.h"
+#include "../include/display.h"
+#include "../include/eeprom.h"
+#include "../include/imu.h"
+#include "../include/motors.h"
+#include "../include/battery.h"
+
+#include "tx_api.h"
+
+unsigned long my_thread_counter = 0;
+TX_THREAD my_thread;
 
 __IO uint16_t adc_value[10];
 
@@ -92,6 +97,9 @@ int main(void)
     DISPLAY_Init();
     IMU_Init();
 
+    /* Enter the ThreadX kernel. */
+    tx_kernel_enter( );
+
     while(1){
 
         BATTERY_App();
@@ -131,6 +139,26 @@ int main(void)
         // delay_1ms(500);
         // gpio_bit_set(GPIOF, GPIO_PIN_11);
     } 
+}
+
+void my_thread_entry(ULONG thread_input)
+{
+    /* Enter into a forever loop. */
+    while(1)
+    {
+        /* Increment thread counter. */
+        my_thread_counter++;
+        /* Sleep for 1 tick. */
+        tx_thread_sleep(1);
+    }
+}
+
+void tx_application_define(void *first_unused_memory)
+{
+    /* Create my_thread! */
+    tx_thread_create(&my_thread, "My Thread",
+    my_thread_entry, 0x1234, first_unused_memory, 1024,
+    3, 3, TX_NO_TIME_SLICE, TX_AUTO_START);
 }
 
 /*!

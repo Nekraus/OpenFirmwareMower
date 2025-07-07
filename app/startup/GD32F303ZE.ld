@@ -7,6 +7,10 @@ _estack = 0x20010000;    /* end of RAM */
 _Min_Heap_Size = 0x200;      /* required amount of heap  */
 _Min_Stack_Size = 0x400;     /* required amount of stack */
 
+/* Set the RAM segment used end for threadx */
+__RAM_segment_used_end__ = 0; 
+
+
 /* Specify the memory areas */
 MEMORY
 {
