@@ -1,12 +1,13 @@
 /*
- * eeprom.h 
+ * adc.h 
  *
- *  Created on: 31/03/2025 
+ *  Created on: 07/07/2025 
  *      Author: Bruno Lecornu 
  */
 
-#ifndef EEPROM_H
-#define EEPROM_H
+#ifndef ADC_H
+#define ADC_H
+
 #include "main.h"
 /* +-----------------------------------------------------------------------+ */
 /* |                        CONSTANTES / MACROS                            | */
@@ -23,5 +24,7 @@
 /* +-----------------------------------------------------------------------+ */
 /* |                         PUBLIC FUNCTIONS                              | */
 /* +-----------------------------------------------------------------------+ */
+void ADC_Init(void);
+void ADC_App(void);
 
-#endif /* EEPROM_H*/
+#endif /* ADC_H*/

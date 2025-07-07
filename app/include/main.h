@@ -8,11 +8,11 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
-#include "gd32f30x.h"
-#include "gd32f30x_it.h"
-#include "systick.h"
 #include <stdio.h>
 #include <stdbool.h>
+
+#include "gd32f30x.h"
+#include "gd32f30x_it.h"
 
 /* +-----------------------------------------------------------------------+ */
 /* |                        CONSTANTES / MACROS                            | */
