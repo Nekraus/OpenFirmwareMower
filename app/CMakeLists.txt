@@ -26,6 +26,6 @@ target_include_directories(gd32_openfirmwaremower
         include/
 )
 
-set_target_linker(gd32_openfirmwaremower /home/nekraus/OpenFirmwareMower/app/startup/GD32F303ZE.ld)
+set_target_linker(gd32_openfirmwaremower  ${CMAKE_CURRENT_SOURCE_DIR}/startup/GD32F303ZE.ld)
 
 post_build(gd32_openfirmwaremower)
