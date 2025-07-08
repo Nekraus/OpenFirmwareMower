@@ -45,7 +45,6 @@ TX_THREAD my_thread;
 */
 int main(void)
 {
-    ADC_Init();
     BATTERY_init();
     MOTORS_Init();
     DISPLAY_Init();

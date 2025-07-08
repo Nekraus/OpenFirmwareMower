@@ -25,7 +25,13 @@
 /* +-----------------------------------------------------------------------+ */
 /* |                         LOCAL VARIABLES                               | */
 /* +-----------------------------------------------------------------------+ */
-
+    float acc_x = 0.0f;
+    float acc_y = 0.0f;
+    float acc_z = 0.0f;
+    float gyro_x = 0.0f;
+    float gyro_y = 0.0f;
+    float gyro_z = 0.0f;
+    float temp_f = 0.0;
 /* +-----------------------------------------------------------------------+ */
 /* |                         Prototype FUNCTIONS                           | */
 /* +-----------------------------------------------------------------------+ */
@@ -39,20 +45,23 @@ uint8_t spi2_readwrite(uint8_t byte);
 /* +-----------------------------------------------------------------------+ */
 /* |                         PUBLIC FUNCTIONS                              | */
 /* +-----------------------------------------------------------------------+ */
-void IMU_Init(void){
-
+void IMU_App(void){
     imu_init_hard();
     imu_init_component();
-
 }
 
 void IMU_getData(imu_data_t* data){
-
+    data->ax = acc_x;
+    data->ay = acc_y;
+    data->az = acc_z;
+    data->gx = gyro_x;
+    data->gy = gyro_y;
+    data->gz = gyro_z;
+    data->temp = temp_f;
 }
 /* +-----------------------------------------------------------------------+ */
 /* |                           LOCAL FUNCTIONS                             | */
 /* +-----------------------------------------------------------------------+ */
-
 void imu_init_hard(void){
     spi_parameter_struct spi_init_struct;
 
@@ -97,48 +106,66 @@ void imu_init_component(void){
     imu_read(0xdd,1,&tmp);
     /* sleep 50ms*/
     tx_thread_sleep(50);
-    imu_write(cmd[index],1,&data[index++]);
-    imu_write(cmd[index],1,&data[index++]);
-    imu_write(cmd[index],1,&data[index++]);
+    imu_write(cmd[index],1,&data[index]);
+    index++;
+    imu_write(cmd[index],1,&data[index]);
+    index++;
+    imu_write(cmd[index],1,&data[index]);
+    index++;
     /* sleep 500ms*/
     tx_thread_sleep(500);
-    imu_write(cmd[index],1,&data[index++]);
-    imu_write(cmd[index],1,&data[index++]);
-    imu_write(cmd[index],1,&data[index++]);
+    imu_write(cmd[index],1,&data[index]);
+    index++;
+    imu_write(cmd[index],1,&data[index]);
+    index++;
+    imu_write(cmd[index],1,&data[index]);
+    index++;
     /* sleep 100ms*/
     tx_thread_sleep(100);
-    imu_write(cmd[index],1,&data[index++]);
-    imu_write(cmd[index],1,&data[index++]);
+    imu_write(cmd[index],1,&data[index]);
+    index++;
+    imu_write(cmd[index],1,&data[index]);
+    index++;
     /* sleep 1ms*/
     tx_thread_sleep(1);
-    imu_write(cmd[index],1,&data[index++]);
+    imu_write(cmd[index],1,&data[index]);
+    index++;
     /* sleep 1ms*/
     tx_thread_sleep(1);
-    imu_write(cmd[index],1,&data[index++]);
+    imu_write(cmd[index],1,&data[index]);
+    index++;
     /* sleep 50ms*/
     tx_thread_sleep(50);
-    imu_write(cmd[index],1,&data[index++]);
+    imu_write(cmd[index],1,&data[index]);
+    index++;
     /* sleep 10ms*/
     tx_thread_sleep(10);
-    imu_write(cmd[index],1,&data[index++]);
+    imu_write(cmd[index],1,&data[index]);
+    index++;
     /* sleep 1ms*/
     tx_thread_sleep(1);
-    imu_write(cmd[index],1,&data[index++]);
+    imu_write(cmd[index],1,&data[index]);
+    index++;
     /* sleep 10ms*/
     tx_thread_sleep(10);
-    imu_write(cmd[index],1,&data[index++]);
+    imu_write(cmd[index],1,&data[index]);
+    index++;
     /* sleep 10ms*/
     tx_thread_sleep(10);
-    imu_write(cmd[index],1,&data[index++]);
+    imu_write(cmd[index],1,&data[index]);
+    index++;
     /* sleep 10ms*/
     tx_thread_sleep(10);
-    imu_write(cmd[index],1,&data[index++]);
+    imu_write(cmd[index],1,&data[index]);
+    index++;
     /* sleep 10ms*/
     tx_thread_sleep(10);
-    imu_write(cmd[index],1,&data[index++]);
+    imu_write(cmd[index],1,&data[index]);
+    index++;
     /* sleep 10ms*/
     tx_thread_sleep(10);
-    imu_write(cmd[index],1,&data[index++]);
+    imu_write(cmd[index],1,&data[index]);
+    index++;
     /* sleep 10ms*/
     tx_thread_sleep(10);
     
@@ -182,17 +209,9 @@ void imu_init_component(void){
     volatile int16_t temp;
     volatile uint16_t temp1;
     volatile uint16_t temp2;
-    volatile float temp_f = 0.0;
+
 
     int16_t* p_tmp;
-    volatile float acc_x = 0.0f;
-    volatile float acc_y = 0.0f;
-    volatile float acc_z = 0.0f;
-
-    volatile float gyro_x = 0.0f;
-    volatile float gyro_y = 0.0f;
-    volatile float gyro_z = 0.0f;
-
     imu_read(0x20,2,&tmp);
     temp1 = ((tmp&0x000F)<<8);
     temp1 = temp1 + ((tmp&0xFF00)>>8);
@@ -203,31 +222,31 @@ void imu_init_component(void){
     temp_f = (float)temp;
     temp_f /= 16.0f;
     temp_f += 25.0f;
-while(0){
-    /* read acc and gyro*/
-    imu_read(0x00,12,(uint8_t*)acc);
-    /*acc div by 8192 
-    div by calibration data ?
-     x9.8
-     so m/s2? */
-     p_tmp = (int16_t*)&acc[0] ;
-     acc_x = (float)*p_tmp / 8192.0f *9.8f;
-     p_tmp = (int16_t*)&acc[1] ;
-     acc_y = (float)*p_tmp / 8192.0f *9.8f;
-     p_tmp = (int16_t*)&acc[2] ;
-     acc_z = (float)*p_tmp / 8192.0f *9.8f;
-/* gyro  div by 131.1
-multi by Pi
-div by 180
-so °/s ?*/
-    p_tmp = (int16_t*)&acc[3] ;
-    gyro_x = (float)*p_tmp / 131.1f * 3.14f / 180.0f;
-    p_tmp = (int16_t*)&acc[4] ;
-    gyro_y = (float)*p_tmp / 131.1f * 3.14f / 180.0f;
-    p_tmp = (int16_t*)&acc[5] ;
-    gyro_z = (float)*p_tmp / 131.1f * 3.14f / 180.0f;
-    tx_thread_sleep(10);
-}
+    while(0){
+        /* read acc and gyro*/
+        imu_read(0x00,12,(uint8_t*)acc);
+        /*acc div by 8192 
+        div by calibration data ?
+        x9.8
+        so m/s2? */
+        p_tmp = (int16_t*)&acc[0] ;
+        acc_x = (float)*p_tmp / 8192.0f *9.8f;
+        p_tmp = (int16_t*)&acc[1] ;
+        acc_y = (float)*p_tmp / 8192.0f *9.8f;
+        p_tmp = (int16_t*)&acc[2] ;
+        acc_z = (float)*p_tmp / 8192.0f *9.8f;
+    /* gyro  div by 131.1
+    multi by Pi
+    div by 180
+    so °/s ?*/
+        p_tmp = (int16_t*)&acc[3] ;
+        gyro_x = (float)*p_tmp / 131.1f * 3.14f / 180.0f;
+        p_tmp = (int16_t*)&acc[4] ;
+        gyro_y = (float)*p_tmp / 131.1f * 3.14f / 180.0f;
+        p_tmp = (int16_t*)&acc[5] ;
+        gyro_z = (float)*p_tmp / 131.1f * 3.14f / 180.0f;
+        tx_thread_sleep(10);
+    }
 }
 
 void imu_read(uint8_t p_u8Cmd, uint32_t p_u32Size, uint8_t *p_pu8Data){

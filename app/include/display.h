@@ -24,6 +24,6 @@
 /* |                         PUBLIC FUNCTIONS                              | */
 /* +-----------------------------------------------------------------------+ */
 
-void DISPLAY_Init(void);
+void DISPLAY_App(void);
 
 #endif /* DISPLAY_H*/

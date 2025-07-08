@@ -44,13 +44,13 @@ bool write_then_readLCD(int param_1);
 /* |                         PUBLIC FUNCTIONS                              | */
 /* +-----------------------------------------------------------------------+ */
 /*!
-    \brief   void DISPLAY_Init(void)
+    \brief   void DISPLAY_App(void)
     Init all the periph for the Digital Inputs use
     \param[in]  none
     \param[out] none
     \retval     none
 */
-void DISPLAY_Init(void){
+void DISPLAY_App(void){
     rcu_periph_clock_enable(RCU_GPIOA);
     rcu_periph_clock_enable(RCU_GPIOB);
     rcu_periph_clock_enable(RCU_GPIOD);
