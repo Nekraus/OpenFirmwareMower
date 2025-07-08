@@ -34,9 +34,6 @@ OF SUCH DAMAGE.
 #include "../include/battery.h"
 #include "../include/adc.h"
 
-
-#include "tx_api.h"
-
 unsigned long my_thread_counter = 0;
 TX_THREAD my_thread;
 
@@ -63,7 +60,7 @@ void my_thread_entry(ULONG thread_input)
     /* Enter into a forever loop. */
     while(1)
     {
-        ADC_app();
+        ADC_App();
         /* Sleep for 1 tick. */
         tx_thread_sleep(1);
     }

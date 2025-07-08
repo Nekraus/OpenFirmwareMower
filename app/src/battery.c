@@ -1,5 +1,4 @@
 #include "gd32f30x.h"
-#include "systick.h"
 #include <stdio.h>
 #include "battery.h"
 
@@ -113,7 +112,7 @@ void BATTERY_ActiveAnalogWatchdog(void)
 {
     if ((ADC_CTL0(ADC0) & ADC_CTL0_RWDEN) == 0)
     {
-        battery_u32StartTime_AnalogWDG = get_ticks();
+        battery_u32StartTime_AnalogWDG = tx_time_get();
         battery_u32PulseTime_AnalogWDG = battery_u32StartTime_AnalogWDG;
 
         /* activate interrupt ADC interrupt */
@@ -146,7 +145,7 @@ void BATTERY_DesactiveAnalogWatchdog(void)
 */
 void BATTERY_AnalogWatchdogIRQ(void)
 {
-    battery_u32PulseTime_AnalogWDG = get_ticks();
+    battery_u32PulseTime_AnalogWDG = tx_time_get();
     battery_u32NbPulse++;
 }
 /*!
@@ -180,7 +179,7 @@ void BATTERY_ExtlineIRQ(void){
         timer_interrupt_flag_clear(TIMER2, TIMER_INT_FLAG_UP);
         uint8_t l_u8Bit = gpio_input_bit_get(GPIOB, GPIO_PIN_8);
         /* divide by 8 (>>3) to get Bytes */
-        battery_pu8Status[(battery_u8StatusNbBit>>3)] |=(l_u8Bit & 0x01) << (7 - (battery_u8StatusNbBit & 7) & 0xff)  ;
+        battery_pu8Status[(battery_u8StatusNbBit>>3)] |=(l_u8Bit & 0x01) << (7 - (battery_u8StatusNbBit & 7))  ;
         battery_u8StatusNbBit ++;
     }
     else
@@ -206,7 +205,7 @@ void BATTERY_TimerIRQ(void)
  {
     uint8_t l_u8Bit = gpio_input_bit_get(GPIOB, GPIO_PIN_8);
     /* divide by 8 (>>3) to get Bytes */
-    battery_pu8Status[(battery_u8StatusNbBit>>3)] |=(l_u8Bit & 0x01) << (7 - (battery_u8StatusNbBit & 7) & 0xff) ;
+    battery_pu8Status[(battery_u8StatusNbBit>>3)] |=(l_u8Bit & 0x01) << (7 - (battery_u8StatusNbBit & 7)) ;
     battery_u8StatusNbBit ++;
     if( 39 < battery_u8StatusNbBit )
     {
@@ -278,7 +277,7 @@ uint8_t BATTERY_Get_DS_State(uint16_t p_u16PC1, uint8_t p_u8TypeBattery)
 
 uint8_t battery_get_DS_State_new(uint16_t p_u16PC1, uint8_t p_u8TypeBattery)
 {
-    uint32_t l_u32CurrentTime = get_ticks();
+    uint32_t l_u32CurrentTime = tx_time_get();
     static uint32_t l_su32ReactiveWDG = 0;
     static uint32_t l_su32CntTimeout = 0;
     static uint32_t l_su32CntOverheat = 0;
@@ -406,7 +405,7 @@ int32_t battery_Set_Mode(battery_mode_e p_eMode)
             {
             case MODE_CS_CHARGE:
                 battery_CSState = CS_STATE_INIT;
-                battery_u32StartTime_CS = get_ticks();
+                battery_u32StartTime_CS = tx_time_get();
                 battery_u32StatusReceived = 0;
                 BATTERY_DesactiveAnalogWatchdog();
                 exti_interrupt_disable(EXTI_8);

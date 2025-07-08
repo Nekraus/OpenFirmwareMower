@@ -8,7 +8,7 @@
 /* +-----------------------------------------------------------------------+ */
 /* |                               HEADER                                  | */
 /* +-----------------------------------------------------------------------+ */
-#include "display.h" 
+#include "../include/display.h" 
 
 /* +-----------------------------------------------------------------------+ */
 /* |                            TYPEDEFS                                   | */
@@ -62,21 +62,21 @@ void DISPLAY_Init(void){
     /* PB12 -> Reset, PB13 -> RS PB14-> Read/Write PB15 -> E */
     gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15);
 
-    gpio_init(GPIOD, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, \ 
+    gpio_init(GPIOD, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, \
         GPIO_PIN_8 |GPIO_PIN_9 |GPIO_PIN_10|GPIO_PIN_11| \
         GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15);
 
-    delay_1ms(5);
+    tx_thread_sleep(5);
     gpio_bit_reset(GPIOB, GPIO_PIN_12);
-    delay_1ms(20);
+    tx_thread_sleep(20);
     gpio_bit_set(GPIOB, GPIO_PIN_12);
-    delay_1ms(20);
+    tx_thread_sleep(20);
     /* Function Set 8 bit 2 lines */
     display_send_cmd(0x39);
-    delay_1ms(5);
+    tx_thread_sleep(5);
     /* Function Set 8 bit 2 lines */
     display_send_cmd(0x39);
-    delay_1ms(5);
+    tx_thread_sleep(5);
     /* Cursor On */
     display_send_cmd(0x14);
     /* Set CGRAM address 0x14? */
@@ -87,13 +87,13 @@ void DISPLAY_Init(void){
     display_send_cmd(0x7e);
     /* Display ON */
     display_send_cmd(0xc);
-    delay_1ms(5);
+    tx_thread_sleep(5);
     /* clear display */
     display_send_cmd(1);
-    delay_1ms(10);
+    tx_thread_sleep(10);
     /* Entry Mode Set increment */
     display_send_cmd(6);
-    delay_1ms(10);
+    tx_thread_sleep(10);
 
     // int i;
     // for (i = 0; i < 256; i++) {
@@ -120,10 +120,10 @@ void display_send_cmd(uint8_t p_u8Cmd){
     /* send Data */
     gpio_bit_set(GPIOD, ~p_u8Cmd<<24 |p_u8Cmd<<8 );
     /*todo change wait*/
-    delay_1ms(1);
+    tx_thread_sleep(1);
     gpio_bit_reset(GPIOB, GPIO_PIN_15);
     /*todo change wait*/
-    delay_1ms(1);
+    tx_thread_sleep(1);
 }
 
 void display_send_data(uint8_t p_u8data){
@@ -134,10 +134,10 @@ void display_send_data(uint8_t p_u8data){
     /* send Data */
     gpio_bit_set(GPIOD, ~p_u8data<<24 | p_u8data<<8 );
     /*todo change wait*/
-    delay_1ms(1);
+    tx_thread_sleep(1);
     gpio_bit_reset(GPIOB, GPIO_PIN_15);
     /*todo change wait*/
-    delay_1ms(1);
+    tx_thread_sleep(1);
 }
 
 
@@ -169,7 +169,7 @@ bool write_then_readLCD(int param_1)
     uint8_t l_u8Data = 0;
     bool l_bReturn = false;
 
-    delay_1ms(100);
+    tx_thread_sleep(100);
     gpio_bit_reset(GPIOA, GPIO_PIN_11);
     /* return HOME */
     display_send_cmd(2);
@@ -198,9 +198,9 @@ uint8_t display_readData(void)
     uint8_t l_u8Return;
     gpio_bit_set(GPIOB,GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15);
     l_u8Return = display_readGPIOD();
-    delay_1ms(1);
+    tx_thread_sleep(1);
     gpio_bit_reset(GPIOB,GPIO_PIN_15);
-    delay_1ms(1);
+    tx_thread_sleep(1);
     return l_u8Return;
 }
 

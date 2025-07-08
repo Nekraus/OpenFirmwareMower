@@ -55,7 +55,7 @@ void ADC_Init(void){
     usart_enable(USART0);
 }
 
-void ADC_app(void){
+void ADC_App(void){
     /* not used on the original firmware PA0 is linked to the charger input voltage*/
     adc_value[0]=adc0_channel_sample(ADC_CHANNEL_0);
     adc_value[1]=adc0_channel_sample(ADC_CHANNEL_1);
@@ -137,7 +137,7 @@ void adc_config(void)
 
     /* enable ADC interface */
     adc_enable(ADC0);
-    delay_1ms(1U);
+    //delay_1ms(1U);
     /* ADC calibration and reset calibration */
     adc_calibration_enable(ADC0);
 
@@ -155,7 +155,7 @@ void adc_config(void)
 
     /* enable ADC interface */
     adc_enable(ADC2);
-    delay_1ms(1U);
+    //delay_1ms(1U);
     /* ADC calibration and reset calibration */
     adc_calibration_enable(ADC2);
 }

@@ -11,6 +11,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+#include "tx_api.h"
+
 #include "gd32f30x.h"
 #include "gd32f30x_it.h"
 

@@ -1,6 +1,5 @@
 
 #include "gd32f30x_it.h"
-#include "systick.h"
 #include "battery.h"
 #include "motors.h"
 

@@ -8,6 +8,7 @@
 /* +-----------------------------------------------------------------------+ */
 /* |                               HEADER                                  | */
 /* +-----------------------------------------------------------------------+ */
+#include "tx_api.h"
 #include "imu.h"
 /* +-----------------------------------------------------------------------+ */
 /* |                            TYPEDEFS                                   | */
@@ -92,54 +93,54 @@ void imu_init_component(void){
     imu_read(0x0f,1,&tmp);
     imu_read(0xdd,1,&tmp);
     /* sleep 50ms*/
-    delay_1ms(50);
+    tx_thread_sleep(50);
     imu_read(0xdd,1,&tmp);
     /* sleep 50ms*/
-    delay_1ms(50);
+    tx_thread_sleep(50);
     imu_write(cmd[index],1,&data[index++]);
     imu_write(cmd[index],1,&data[index++]);
     imu_write(cmd[index],1,&data[index++]);
     /* sleep 500ms*/
-    delay_1ms(500);
+    tx_thread_sleep(500);
     imu_write(cmd[index],1,&data[index++]);
     imu_write(cmd[index],1,&data[index++]);
     imu_write(cmd[index],1,&data[index++]);
     /* sleep 100ms*/
-    delay_1ms(100);
+    tx_thread_sleep(100);
     imu_write(cmd[index],1,&data[index++]);
     imu_write(cmd[index],1,&data[index++]);
     /* sleep 1ms*/
-    delay_1ms(1);
+    tx_thread_sleep(1);
     imu_write(cmd[index],1,&data[index++]);
     /* sleep 1ms*/
-    delay_1ms(1);
+    tx_thread_sleep(1);
     imu_write(cmd[index],1,&data[index++]);
     /* sleep 50ms*/
-    delay_1ms(50);
+    tx_thread_sleep(50);
     imu_write(cmd[index],1,&data[index++]);
     /* sleep 10ms*/
-    delay_1ms(10);
+    tx_thread_sleep(10);
     imu_write(cmd[index],1,&data[index++]);
     /* sleep 1ms*/
-    delay_1ms(1);
+    tx_thread_sleep(1);
     imu_write(cmd[index],1,&data[index++]);
     /* sleep 10ms*/
-    delay_1ms(10);
+    tx_thread_sleep(10);
     imu_write(cmd[index],1,&data[index++]);
     /* sleep 10ms*/
-    delay_1ms(10);
+    tx_thread_sleep(10);
     imu_write(cmd[index],1,&data[index++]);
     /* sleep 10ms*/
-    delay_1ms(10);
+    tx_thread_sleep(10);
     imu_write(cmd[index],1,&data[index++]);
     /* sleep 10ms*/
-    delay_1ms(10);
+    tx_thread_sleep(10);
     imu_write(cmd[index],1,&data[index++]);
     /* sleep 10ms*/
-    delay_1ms(10);
+    tx_thread_sleep(10);
     imu_write(cmd[index],1,&data[index++]);
     /* sleep 10ms*/
-    delay_1ms(10);
+    tx_thread_sleep(10);
     
     imu_read(0x22,1,&tmp);
     tmp = (tmp & 0xff) | 1;
@@ -225,7 +226,7 @@ so °/s ?*/
     gyro_y = (float)*p_tmp / 131.1f * 3.14f / 180.0f;
     p_tmp = (int16_t*)&acc[5] ;
     gyro_z = (float)*p_tmp / 131.1f * 3.14f / 180.0f;
-    delay_1ms(10);
+    tx_thread_sleep(10);
 }
 }
 

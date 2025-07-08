@@ -8,6 +8,7 @@
 /* +-----------------------------------------------------------------------+ */
 /* |                               HEADER                                  | */
 /* +-----------------------------------------------------------------------+ */
+#include "tx_api.h"
 #include "motors.h"
 
 /* +-----------------------------------------------------------------------+ */
@@ -158,31 +159,31 @@ void MOTORS_App(void){
     case 0:
         motors_selectMotor(MOTORS_SELECT_RIGHT);
         motors_prepareInit_1(MOTORS_SELECT_RIGHT);
-        delay_1ms(10);
+        tx_thread_sleep(10);
         motors_prepareInit_2(MOTORS_SELECT_RIGHT);
-        delay_1ms(10);
+        tx_thread_sleep(10);
         motors_prepareInit_3(MOTORS_SELECT_RIGHT);
-        delay_1ms(10);
+        tx_thread_sleep(10);
         motors_selectMotor(MOTORS_SELECT_LEFT);
-        delay_1ms(1);
+        tx_thread_sleep(1);
         motors_prepareInit_1(MOTORS_SELECT_LEFT);
-        delay_1ms(10);
+        tx_thread_sleep(10);
         motors_prepareInit_2(MOTORS_SELECT_LEFT);
-        delay_1ms(10);
+        tx_thread_sleep(10);
         motors_prepareInit_3(MOTORS_SELECT_LEFT);
-        delay_1ms(10);
+        tx_thread_sleep(10);
         state = 1;
         break;
     
         case 1:
         motors_selectMotor(MOTORS_SELECT_RIGHT);
-        delay_1ms(1);
+        tx_thread_sleep(1);
         motors_motors_SendSpeedCmd(MOTORS_SELECT_RIGHT, 2000 ,0);
-        delay_1ms(10);
+        tx_thread_sleep(10);
         motors_selectMotor(MOTORS_SELECT_LEFT);
-        delay_1ms(1);
+        tx_thread_sleep(1);
         motors_motors_SendSpeedCmd(MOTORS_SELECT_LEFT, 000, 0);
-        delay_1ms(10);
+        tx_thread_sleep(10);
         break;
     
     default:
