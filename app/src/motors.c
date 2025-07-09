@@ -42,11 +42,6 @@ typedef struct {
     uint8_t pu8Data[6];
 } motor_msg_t;
 
-typedef struct {
-    uint8_t u8Motor_id;
-    uint8_t u8Cmd_id;
-    uint8_t pu8Data[6];
-} motor_msg_rx_t;
 /* +-----------------------------------------------------------------------+ */
 /* |                        CONSTANTES / MACROS                            | */
 /* +-----------------------------------------------------------------------+ */
@@ -80,7 +75,7 @@ uint8_t motors_pu8FdbckFlags[MOTORS_SELECT_MAX] = {0};
 /* +-----------------------------------------------------------------------+ */
 void motors_ReloadRxDMA(void);
 void motors_selectMotor(MOTORS_SELECT_e p_eSelectedMotor);
-void motors_motors_SendSpeedCmd(MOTORS_SELECT_e p_eSelectedMotor, int16_t p_s16Speed, uint16_t p_u16Voltage);
+void motors_SendSpeedCmd(MOTORS_SELECT_e p_eSelectedMotor, int16_t p_s16Speed, uint16_t p_u16Voltage);
 void motors_SendBrakeCmd(MOTORS_SELECT_e p_eSelectedMotor);
 void motors_SendAskCurrentCmd(MOTORS_SELECT_e p_eSelectedMotor);
 int8_t motors_SendMsg(motor_msg_t* p_psMsg);
@@ -88,6 +83,9 @@ uint8_t motors_Calculatechecksum(motor_msg_t* p_psMsg);
 void motors_prepareInit_1(MOTORS_SELECT_e p_eSelectedMotor);
 void motors_prepareInit_2(MOTORS_SELECT_e p_eSelectedMotor);
 void motors_prepareInit_3(MOTORS_SELECT_e p_eSelectedMotor);
+
+void motors_Init(void);
+void motors_Decode(uint8_t *p_pu8RxBuffer);
 
 /* +-----------------------------------------------------------------------+ */
 /* |                         PUBLIC FUNCTIONS                              | */
@@ -200,7 +198,7 @@ void MOTORS_getMowSpeed(int16_t *p_ps16MowSpeed){
     \param[out] none
     \retval     none
 */
-motors_Decode(uint8_t *p_pu8RxBuffer){
+void motors_Decode(uint8_t *p_pu8RxBuffer){
     if(p_pu8RxBuffer[0] == 0xD5 && p_pu8RxBuffer[1] == 0xE5){
         motor_msg_t l_sMotorMsg;
         l_sMotorMsg.u8Motor_id = p_pu8RxBuffer[2];
@@ -228,8 +226,7 @@ motors_Decode(uint8_t *p_pu8RxBuffer){
                 motors_pu8FdbckFlags[l_sMotorMsg.u8Motor_id] = l_sMotorMsg.pu8Data[4];
                 break;
             case MOTORS_CMDID_TICKS:
-                motors_ps32Fdbckticks = (int32_t)((l_sMotorMsg.pu8Data[3]<<24) | (l_sMotorMsg.pu8Data[2]<<16)\
-                                         | (l_sMotorMsg.pu8Data[1]<<8) | l_sMotorMsg.pu8Data[0]);
+                motors_ps32Fdbckticks[l_sMotorMsg.u8Motor_id] = (int32_t)((l_sMotorMsg.pu8Data[3])<<24 | (l_sMotorMsg.pu8Data[2])<<16 | (l_sMotorMsg.pu8Data[1])<<8 | l_sMotorMsg.pu8Data[0]);
                 break;  
             case MOTORS_CMDID_VOLTAGE:
             case MOTORS_CMDID_CURRENT:
@@ -372,7 +369,7 @@ void motors_selectMotor(MOTORS_SELECT_e p_eSelectedMotor){
     \retval     SUCCESS FAILED
 */
 void motors_SendBrakeCmd(MOTORS_SELECT_e p_eSelectedMotor){
-    motor_msg_tx_t tmp;
+    motor_msg_t tmp;
     if(p_eSelectedMotor < MOTORS_SELECT_MAX){
         tmp.u8Motor_id = p_eSelectedMotor;
         tmp.u8Cmd_id = MOTORS_CMDID_STOP;
@@ -387,7 +384,7 @@ void motors_SendBrakeCmd(MOTORS_SELECT_e p_eSelectedMotor){
 }
 
 void motors_SendAskCurrentCmd(MOTORS_SELECT_e p_eSelectedMotor){
-    motor_msg_tx_t tmp;
+    motor_msg_t tmp;
     if(p_eSelectedMotor < MOTORS_SELECT_MAX){
         tmp.u8Motor_id = p_eSelectedMotor;
         tmp.u8Cmd_id = MOTORS_CMDID_CURRENT;
@@ -410,7 +407,7 @@ void motors_SendAskCurrentCmd(MOTORS_SELECT_e p_eSelectedMotor){
     \retval     SUCCESS FAILED
 */
 void motors_SendSpeedCmd(MOTORS_SELECT_e p_eSelectedMotor, int16_t p_s16Speed, uint16_t p_u16Voltage){
-    motor_msg_tx_t tmp;
+    motor_msg_t tmp;
     if(p_eSelectedMotor < MOTORS_SELECT_MAX){
         tmp.u8Motor_id = p_eSelectedMotor;
         tmp.u8Cmd_id = MOTORS_CMDID_SPEED;
@@ -478,7 +475,7 @@ uint8_t motors_Calculatechecksum(motor_msg_t* p_psMsg){
 }
 
 void motors_prepareInit_1(MOTORS_SELECT_e p_eSelectedMotor){
-    motor_msg_tx_t tmp;
+    motor_msg_t tmp;
     tmp.u8Motor_id = p_eSelectedMotor;
     tmp.u8Cmd_id = 0x04;
     tmp.pu8Data[0] = 0 ;
@@ -490,7 +487,7 @@ void motors_prepareInit_1(MOTORS_SELECT_e p_eSelectedMotor){
     motors_SendMsg(&tmp);
 }
 void motors_prepareInit_2(MOTORS_SELECT_e p_eSelectedMotor){
-    motor_msg_tx_t tmp;
+    motor_msg_t tmp;
     tmp.u8Motor_id = p_eSelectedMotor;
     tmp.u8Cmd_id = 0x00;
     tmp.pu8Data[0] = 0 ;
@@ -502,7 +499,7 @@ void motors_prepareInit_2(MOTORS_SELECT_e p_eSelectedMotor){
     motors_SendMsg(&tmp);
 }
 void motors_prepareInit_3(MOTORS_SELECT_e p_eSelectedMotor){
-    motor_msg_tx_t tmp;
+    motor_msg_t tmp;
     tmp.u8Motor_id = p_eSelectedMotor;
     tmp.u8Cmd_id = 0x01;
     tmp.pu8Data[0] = 0 ;
