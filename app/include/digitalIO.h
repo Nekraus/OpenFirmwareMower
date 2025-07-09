@@ -25,7 +25,6 @@
 /* |                         PUBLIC FUNCTIONS                              | */
 /* +-----------------------------------------------------------------------+ */
 
-void DIGITALIO_Init(void); /* Init Function*/
 void DIGITALIO_App(void);
 
 #endif /* DIGITALIO_H*/

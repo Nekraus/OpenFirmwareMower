@@ -34,8 +34,8 @@ OF SUCH DAMAGE.
 #include "../include/battery.h"
 #include "../include/adc.h"
 
-unsigned long my_thread_counter = 0;
-TX_THREAD my_thread;
+
+TX_THREAD adc_thread;
 
 /*!
     \brief      main function
@@ -45,31 +45,15 @@ TX_THREAD my_thread;
 */
 int main(void)
 {
-    BATTERY_init();
-    MOTORS_Init();
-    DISPLAY_Init();
-    IMU_Init();
     /* Enter the ThreadX kernel. */
     tx_kernel_enter( );
-
-}
-
-void my_thread_entry(ULONG thread_input)
-{
-    /* Enter into a forever loop. */
-    while(1)
-    {
-        ADC_App();
-        /* Sleep for 1 tick. */
-        tx_thread_sleep(1);
-    }
 }
 
 void tx_application_define(void *first_unused_memory)
 {
     /* Create my_thread! */
-    tx_thread_create(&my_thread, "My Thread",
-    my_thread_entry, 0x1234, first_unused_memory, 1024,
+    tx_thread_create(&adc_thread, "ADC",
+    ADC_App, 0, first_unused_memory, 1024,
     3, 3, TX_NO_TIME_SLICE, TX_AUTO_START);
 }
 

@@ -40,22 +40,11 @@ void adc_Init(void);
 /* |                         PUBLIC FUNCTIONS                              | */
 /* +-----------------------------------------------------------------------+ */
 
-void ADC_App(void){
+void ADC_App(ULONG thread_input){
 
     adc_Init();
 
     while(1){
-        /* not used on the original firmware PA0 is linked to the charger input voltage*/
-        adc_value[0]=adc0_channel_sample(ADC_CHANNEL_0);
-        adc_value[1]=adc0_channel_sample(ADC_CHANNEL_1);
-        adc_value[2]=adc0_channel_sample(ADC_CHANNEL_10);
-        adc_value[3]=adc0_channel_sample(ADC_CHANNEL_11);
-        adc_value[4]=adc0_channel_sample(ADC_CHANNEL_12);
-        adc_value[5]=adc0_channel_sample(ADC_CHANNEL_13);
-        adc_value[6]=adc0_channel_sample(ADC_CHANNEL_14);
-        adc_value[7]=adc0_channel_sample(ADC_CHANNEL_15);
-        adc_value[8]=adc2_channel_sample(ADC_CHANNEL_4);
-        adc_value[9]=adc2_channel_sample(ADC_CHANNEL_6);
 
         // printf("Charger Voltage: %d (%1.2fV)\n", adc_value[0], adc_value[0]* 6.0 * 3.3f / 4095.f);
         // printf("Temperature : %d (%1.2fV)\n", adc_value[1], adc_value[1] * 3.3f / 4095.f);
@@ -114,6 +103,33 @@ void gpio_config(void)
   
 }
 
+void adc_timer_config(void)
+{
+/* enable clock input for Timer1 peripheral */
+    rcu_periph_clock_enable(RCU_TIMER1);    
+ 
+    /* get frequency */
+    APBx_PSC = (RCU_CFG0 & RCU_CFG0_APB1PSC) >> 8;
+    if (0 != (APBx_PSC & 0x04)) {
+        clk_src = 2 * rcu_clock_freq_get(CK_APB1);
+    } else {
+        clk_src =  rcu_clock_freq_get(CK_APB1);
+    }
+
+    /* configure TIMER base function */
+    timer_parameter_struct timer_initpara;
+
+    timer_initpara.prescaler = clk_src / 1000000 - 1; /*1Mhz*/
+    timer_initpara.period = 999; /* 1kHz, 1ms*/
+    timer_initpara.repetitioncounter = 0;
+    timer_initpara.clockdivision = TIMER_CKDIV_DIV1;
+    timer_initpara.counterdirection = TIMER_COUNTER_UP;
+    timer_initpara.alignedmode = TIMER_COUNTER_EDGE;
+    timer_autoreload_value_config(TIMER1, 0);
+    timer_init(TIMER1, &timer_initpara);
+
+    timer_enable(TIMER1);
+}
 /*!
     \brief      configure the ADC peripheral
     \param[in]  none
@@ -134,36 +150,50 @@ void adc_config(void)
     /* ADC data alignment config */
     adc_data_alignment_config(ADC0, ADC_DATAALIGN_RIGHT);
     /* ADC channel length config */
-    adc_channel_length_config(ADC0, ADC_REGULAR_CHANNEL, 1U);
-    
+    adc_channel_length_config(ADC0, ADC_REGULAR_CHANNEL, 8U);
+    /* ADC scan mode */
+    adc_special_function_config(ADC0 , ADC_SCAN_MODE, ENABLE);
+    adc_dma_mode_enable(ADC2);
     /* ADC trigger config */
-    adc_external_trigger_source_config(ADC0, ADC_REGULAR_CHANNEL, ADC0_1_2_EXTTRIG_REGULAR_NONE); 
-    /* ADC external trigger config */
-    adc_external_trigger_config(ADC0, ADC_REGULAR_CHANNEL, ENABLE);
-
-    /* enable ADC interface */
-    adc_enable(ADC0);
-    tx_thread_sleep(1);
-    /* ADC calibration and reset calibration */
-    adc_calibration_enable(ADC0);
+    adc_external_trigger_source_config(ADC0, ADC_REGULAR_CHANNEL, ADC0_1_EXTTRIG_REGULAR_T1_CH1); 
 
     /*ADC2*/
 
-     /* ADC data alignment config */
+    /* ADC data alignment config */
     adc_data_alignment_config(ADC2, ADC_DATAALIGN_RIGHT);
     /* ADC channel length config */
-    adc_channel_length_config(ADC2, ADC_REGULAR_CHANNEL, 1U);
-    
+    adc_channel_length_config(ADC2, ADC_REGULAR_CHANNEL, 2U);
+    /* ADC scan mode */
+    adc_special_function_config(ADC2 , ADC_SCAN_MODE, ENABLE);
+    adc_dma_mode_enable(ADC2);
     /* ADC trigger config */
-    adc_external_trigger_source_config(ADC2, ADC_REGULAR_CHANNEL, ADC0_1_2_EXTTRIG_REGULAR_NONE); 
-    /* ADC external trigger config */
-    adc_external_trigger_config(ADC2, ADC_REGULAR_CHANNEL, ENABLE);
+    adc_external_trigger_source_config(ADC2, ADC_REGULAR_CHANNEL, ADC2_EXTTRIG_REGULAR_T1_CH2); 
+
+    /* ADC regular channel config */
+    adc_regular_channel_config(ADC0, 0U, ADC_CHANNEL_0, ADC_SAMPLETIME_239POINT5);
+    adc_regular_channel_config(ADC0, 1U, ADC_CHANNEL_1, ADC_SAMPLETIME_239POINT5);
+    adc_regular_channel_config(ADC0, 2U, ADC_CHANNEL_10, ADC_SAMPLETIME_239POINT5);
+    adc_regular_channel_config(ADC0, 3U, ADC_CHANNEL_11, ADC_SAMPLETIME_239POINT5);
+    adc_regular_channel_config(ADC0, 4U, ADC_CHANNEL_12, ADC_SAMPLETIME_239POINT5);
+    adc_regular_channel_config(ADC0, 5U, ADC_CHANNEL_13, ADC_SAMPLETIME_239POINT5);
+    adc_regular_channel_config(ADC0, 6U, ADC_CHANNEL_14, ADC_SAMPLETIME_239POINT5);
+    adc_regular_channel_config(ADC0, 7U, ADC_CHANNEL_15, ADC_SAMPLETIME_239POINT5);
+
+    adc_regular_channel_config(ADC2, 0U, ADC_CHANNEL_4, ADC_SAMPLETIME_239POINT5);
+    adc_regular_channel_config(ADC2, 1U, ADC_CHANNEL_6, ADC_SAMPLETIME_239POINT5);
 
     /* enable ADC interface */
+    adc_enable(ADC0);
     adc_enable(ADC2);
     tx_thread_sleep(1);
     /* ADC calibration and reset calibration */
+    adc_calibration_enable(ADC0);
     adc_calibration_enable(ADC2);
+
+    /* ADC external trigger config */
+    adc_external_trigger_config(ADC0, ADC_REGULAR_CHANNEL, ENABLE);
+    adc_external_trigger_config(ADC2, ADC_REGULAR_CHANNEL, ENABLE);
+ 
 }
 
 
@@ -209,35 +239,6 @@ uint16_t adc2_channel_sample(uint8_t channel)
     return (adc_regular_data_read(ADC2));
 }
 
-    // while(1){
-
-    //     BATTERY_App();
-    //    // MOTORS_App();
-    //     /* not used on the original firmware PA0 is linked to the charger input voltage*/
-    //     adc_value[0]=adc0_channel_sample(ADC_CHANNEL_0);
-    //     adc_value[1]=adc0_channel_sample(ADC_CHANNEL_1);
-    //     adc_value[2]=adc0_channel_sample(ADC_CHANNEL_10);
-    //     adc_value[3]=adc0_channel_sample(ADC_CHANNEL_11);
-    //     adc_value[4]=adc0_channel_sample(ADC_CHANNEL_12);
-    //     adc_value[5]=adc0_channel_sample(ADC_CHANNEL_13);
-    //     adc_value[6]=adc0_channel_sample(ADC_CHANNEL_14);
-    //     adc_value[7]=adc0_channel_sample(ADC_CHANNEL_15);
-    //     adc_value[8]=adc2_channel_sample(ADC_CHANNEL_4);
-    //     adc_value[9]=adc2_channel_sample(ADC_CHANNEL_6);
-
-
-    //     // printf("Charger Voltage: %d (%1.2fV)\n", adc_value[0], adc_value[0]* 6.0 * 3.3f / 4095.f);
-    //     // printf("Temperature : %d (%1.2fV)\n", adc_value[1], adc_value[1] * 3.3f / 4095.f);
-    //     printf("Battery Voltage: %d (%1.2fV)\n", adc_value[2], adc_value[2] * 10 * 3.3f / 4095.f);
-    //     // printf(" DS: %d (%1.2fV)\n", adc_value[3], adc_value[3] * 3.3f / 4095.f);
-    //     // printf(" DS bis: %d (%1.2fV)\n", adc_value[7], adc_value[7] * 3.3f / 4095.f);
-    //     printf(" Discharge current: %d (%1.2fV)\n", adc_value[4], adc_value[4] * 3.3f / 4095.f /5.f/0.025f);
-    //     // printf(" Charge current: %d (%1.2fV)\n", adc_value[5], adc_value[5] * 3.3f / 4095.f /20.f/0.025f);
-    //     printf(" Mower Motor current: %d (%1.2fV)\n", adc_value[6], adc_value[6] * 3.3f / 4095.f /0.24f);
-    //     printf(" Right Motor current: %d (%1.2fV)\n", adc_value[8], adc_value[8] * 3.3f / 4095.f /0.24f);
-    //     printf(" Left Motor current: %d (%1.2fV)\n", adc_value[9], adc_value[9] * 3.3f / 4095.f /0.24f);
-    //     // printf("\n");
-
-
- 
-    // } 
+/* +-----------------------------------------------------------------------+ */ 
+/* |                               END OF FILE                             | */
+/* +-----------------------------------------------------------------------+ */

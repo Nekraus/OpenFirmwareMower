@@ -34,14 +34,36 @@
 /* |                         PUBLIC FUNCTIONS                              | */
 /* +-----------------------------------------------------------------------+ */
 
+
+
 /*!
-    \brief   void DIGITALIO_Init(void)
+    \brief   void DIGITALIO_App(void)
+    Scan the IO to store it in RAM
+    \param[in]  none
+    \param[out] none
+    \retval     none
+*/
+void DIGITALIO_App(void){
+    digitalIO_Init();
+    while(1){
+        if(gpio_input_bit_get(GPIOG, GPIO_PIN_3) == RESET){
+            gpio_bit_reset(GPIOG, GPIO_PIN_10);
+        }
+    }
+
+}
+
+/* +-----------------------------------------------------------------------+ */
+/* |                           LOCAL FUNCTIONS                             | */
+/* +-----------------------------------------------------------------------+ */
+/*!
+    \brief   void digitalIO_Init(void)
     Init all the periph for the Digital Inputs use
     \param[in]  none
     \param[out] none
     \retval     none
 */
-void DIGITALIO_Init(void){
+void digitalIO_Init(void){
     rcu_periph_clock_enable(RCU_GPIOA);
     rcu_periph_clock_enable(RCU_GPIOC);
     rcu_periph_clock_enable(RCU_GPIOD);
@@ -104,20 +126,3 @@ void DIGITALIO_Init(void){
     /* activate  20v Motors  */
     gpio_bit_set(GPIOE, GPIO_PIN_11);
 }
-
-/*!
-    \brief   void DIGITALIO_App(void)
-    Scan the IO to store it in RAM
-    \param[in]  none
-    \param[out] none
-    \retval     none
-*/
-void DIGITALIO_App(void){
-    if(gpio_input_bit_get(GPIOG, GPIO_PIN_3) == RESET){
-        gpio_bit_reset(GPIOG, GPIO_PIN_10);
-    }
-}
-
-/* +-----------------------------------------------------------------------+ */
-/* |                           LOCAL FUNCTIONS                             | */
-/* +-----------------------------------------------------------------------+ */

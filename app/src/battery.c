@@ -99,6 +99,11 @@ void BATTERY_init(void)
     exti_init(EXTI_8, EXTI_INTERRUPT, EXTI_TRIG_FALLING);
     exti_interrupt_disable(EXTI_8);
     exti_interrupt_flag_clear(EXTI_8);
+
+    /* Outputs for selected CS or DS line
+    * PB6 -> Activate DS, PB7 -> Activate STOP2
+    */
+    gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_10MHZ, GPIO_PIN_6 | GPIO_PIN_7);
 }
 
 /*!
