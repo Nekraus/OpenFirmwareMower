@@ -95,7 +95,9 @@ void gpio_config(void)
 
 void adc_timer_config(void)
 {
-/* enable clock input for Timer1 peripheral */
+    uint32_t APBx_PSC = 0;
+    uint32_t clk_src = 0;
+    /* enable clock input for Timer1 peripheral */
     rcu_periph_clock_enable(RCU_TIMER1);    
  
     /* get frequency */
