@@ -25,6 +25,6 @@
 /* |                         PUBLIC FUNCTIONS                              | */
 /* +-----------------------------------------------------------------------+ */
 
-void DIGITALIO_App(void);
+void DIGITALIO_App(ULONG thread_input);
 
 #endif /* DIGITALIO_H*/

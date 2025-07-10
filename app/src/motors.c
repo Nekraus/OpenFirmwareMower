@@ -92,11 +92,11 @@ void motors_Decode(uint8_t *p_pu8RxBuffer);
 /* +-----------------------------------------------------------------------+ */
 
 
-void MOTORS_App(void){
+void MOTORS_App(ULONG thread_input){
     uint32_t wakeTime;
     const uint32_t wakePeriod = 10;
 
-    tx_semaphore_create(&motors_UART_RX_semaphore,"motors_UART_RX_semaphore", 1);
+    tx_semaphore_create(&motors_UART_RX_semaphore,"motors_UART_RX_semaphore", 0);
 
     motors_Init();
 
@@ -130,10 +130,11 @@ void MOTORS_App(void){
                 tx_thread_sleep(10);
                 motors_prepareInit_3(MOTORS_SELECT_MOWER);
                 tx_thread_sleep(10);
-
+                
+                motors_ReloadRxDMA();
                 state = MOTORS_STATE_LOOP;
                 //Initialise the wakeTime variable with the current time
-                wakePeriod = tx_time_get();
+                wakeTime = tx_time_get();
                 break;
             
             case MOTORS_STATE_LOOP:

@@ -37,7 +37,16 @@ OF SUCH DAMAGE.
 #include  <errno.h>
 #include  <sys/unistd.h> 
 
+#define BYTE_POOL_SIZE 9120
+
 TX_THREAD adc_thread;
+TX_THREAD io_thread;
+TX_THREAD display_thread;
+TX_THREAD motors_thread;
+TX_THREAD battery_thread;
+TX_THREAD imu_thread;
+
+TX_BYTE_POOL byte_pool;
 
 void usart0_init(void);
 
@@ -57,11 +66,13 @@ int main(void)
 
 void tx_application_define(void *first_unused_memory)
 {
-    TX_BYTE_POOL *byte_pool = (TX_BYTE_POOL*)memory_ptr;
     CHAR *pointer;
 
+    /* Create a byte memory pool from which to allocate the thread stacks. */
+    tx_byte_pool_create(&byte_pool, "byte pool 0", first_unused_memory,
+        BYTE_POOL_SIZE);
 
-    if (tx_byte_allocate(byte_pool, (VOID**) &pointer,
+    if (tx_byte_allocate(&byte_pool, (VOID**) &pointer,
                         1024, TX_NO_WAIT) != TX_SUCCESS)
     {
         //return TX_POOL_ERROR;
@@ -71,12 +82,55 @@ void tx_application_define(void *first_unused_memory)
     ADC_App, 0, pointer, 1024,
     3, 3, TX_NO_TIME_SLICE, TX_AUTO_START);
 
-    
-    if (tx_byte_allocate(byte_pool, (VOID**) &pointer,
+    if (tx_byte_allocate(&byte_pool, (VOID**) &pointer,
                         1024, TX_NO_WAIT) != TX_SUCCESS)
     {
         //return TX_POOL_ERROR;
     }
+
+    tx_thread_create(&io_thread, "IO",
+    DIGITALIO_App, 0, pointer, 1024,
+    10, 10, TX_NO_TIME_SLICE, TX_AUTO_START);
+
+    if (tx_byte_allocate(&byte_pool, (VOID**) &pointer,
+                        1024, TX_NO_WAIT) != TX_SUCCESS)
+    {
+        //return TX_POOL_ERROR;
+    }
+
+    tx_thread_create(&display_thread, "DISPLAY",
+    DISPLAY_App, 0, pointer, 1024,
+    3, 3, TX_NO_TIME_SLICE, TX_AUTO_START);
+
+    if (tx_byte_allocate(&byte_pool, (VOID**) &pointer,
+                        1024, TX_NO_WAIT) != TX_SUCCESS)
+    {
+        //return TX_POOL_ERROR;
+    }
+
+    tx_thread_create(&motors_thread, "MOTORS",
+    MOTORS_App, 0, pointer, 1024,
+    3, 3, TX_NO_TIME_SLICE, TX_AUTO_START);
+
+    if (tx_byte_allocate(&byte_pool, (VOID**) &pointer,
+                        1024, TX_NO_WAIT) != TX_SUCCESS)
+    {
+        //return TX_POOL_ERROR;
+    }
+
+    tx_thread_create(&battery_thread, "BATTERY",
+    BATTERY_App, 0, pointer, 1024,
+    3, 3, TX_NO_TIME_SLICE, TX_AUTO_START);
+
+    if (tx_byte_allocate(&byte_pool, (VOID**) &pointer,
+                        1024, TX_NO_WAIT) != TX_SUCCESS)
+    {
+        //return TX_POOL_ERROR;
+    }
+
+    tx_thread_create(&imu_thread, "IMU",
+    IMU_App, 0, pointer, 1024,
+    3, 3, TX_NO_TIME_SLICE, TX_AUTO_START);
 }
 
 
@@ -100,7 +154,7 @@ void usart0_init(void){
     usart_receive_config(USART0, USART_RECEIVE_ENABLE);
     usart_transmit_config(USART0, USART_TRANSMIT_ENABLE);
     usart_enable(USART0);
-})
+}
 
 /* retarget the gcc's C library printf function to the USART */
 int _write(int file, char *data, int len)

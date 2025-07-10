@@ -84,7 +84,7 @@ void BATTERY_TimerIRQ(void);
     \param[out] none
     \retval     none
 */
-void BATTERY_App(void);
+void BATTERY_App(ULONG thread_input);
 
 uint8_t BATTERY_Monitoring(int32_t p_u32Voltage, int32_t p_u32Current, uint8_t p_u8Type, uint16_t p_u16Status);
 

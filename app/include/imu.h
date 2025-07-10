@@ -31,6 +31,6 @@ typedef struct {
 /* +-----------------------------------------------------------------------+ */
 /* |                         PUBLIC FUNCTIONS                              | */
 /* +-----------------------------------------------------------------------+ */
-void IMU_App(void);
+void IMU_App(ULONG thread_input);
 void IMU_getData(imu_data_t* data);
 #endif /* IMU_H*/

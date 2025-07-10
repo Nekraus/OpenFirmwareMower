@@ -114,6 +114,15 @@ SECTIONS
     _ebss = .;         /* define a global symbol at bss end */
     __bss_end__ = _ebss;
   } >RAM
+  
+  ._threadx_heap :
+  {
+     . = ALIGN(8);
+      _size_so_far = . - ORIGIN(RAM);
+     __RAM_segment_used_end__ = .;
+     . = ((. + (LENGTH(RAM) - _Min_Heap_Size - _Min_Stack_Size) - (_size_so_far)) / 8) * 8;
+     . = ALIGN(8);
+   } >RAM
 
   /* User_heap_stack section, used to check that there is enough RAM left */
   ._user_heap_stack :

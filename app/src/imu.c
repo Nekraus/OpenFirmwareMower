@@ -45,7 +45,7 @@ uint8_t spi2_readwrite(uint8_t byte);
 /* +-----------------------------------------------------------------------+ */
 /* |                         PUBLIC FUNCTIONS                              | */
 /* +-----------------------------------------------------------------------+ */
-void IMU_App(void){
+void IMU_App(ULONG thread_input){
     imu_init_hard();
     imu_init_component();
 }
@@ -222,7 +222,7 @@ void imu_init_component(void){
     temp_f = (float)temp;
     temp_f /= 16.0f;
     temp_f += 25.0f;
-    while(0){
+    while(1){
         /* read acc and gyro*/
         imu_read(0x00,12,(uint8_t*)acc);
         /*acc div by 8192 

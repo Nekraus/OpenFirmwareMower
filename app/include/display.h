@@ -24,6 +24,6 @@
 /* |                         PUBLIC FUNCTIONS                              | */
 /* +-----------------------------------------------------------------------+ */
 
-void DISPLAY_App(void);
+void DISPLAY_App(ULONG thread_input);
 
 #endif /* DISPLAY_H*/

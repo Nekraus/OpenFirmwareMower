@@ -32,7 +32,7 @@ uint16_t adc2_channel_sample(uint8_t channel);
 /* +-----------------------------------------------------------------------+ */
 /* |                         Prototype FUNCTIONS                           | */
 /* +-----------------------------------------------------------------------+ */
-void rcu_config(void);
+void adc_timer_config(void);
 void gpio_config(void);
 void adc_config(void);
 void adc_Init(void);
@@ -42,6 +42,7 @@ void adc_Init(void);
 
 void ADC_App(ULONG thread_input){
 
+    adc_timer_config();
     adc_Init();
 
     while(1){

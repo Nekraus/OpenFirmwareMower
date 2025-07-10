@@ -32,6 +32,6 @@
 /* |                         PUBLIC FUNCTIONS                              | */
 /* +-----------------------------------------------------------------------+ */
 
-void thread_sleepUntil(uint32_t * const previousWakeTime, const uint32_t timeIncrement)
+void thread_sleepUntil(uint32_t * const previousWakeTime, const uint32_t timeIncrement);
 
 #endif /* MAIN_H_ */

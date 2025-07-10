@@ -25,10 +25,8 @@
 /* |                         PUBLIC FUNCTIONS                              | */
 /* +-----------------------------------------------------------------------+ */
 
-/* Init the GPIO and UART to communicate Motors drivers*/ 
-void MOTORS_Init(void);
 /* App Motors drivers*/
-void MOTORS_App(void);
+void MOTORS_App(ULONG thread_input);
 
 void MOTORS_DMARxIRQ(void);
 

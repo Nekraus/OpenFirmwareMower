@@ -37,13 +37,13 @@ void digitalIO_Init(void);
 
 
 /*!
-    \brief   void DIGITALIO_App(void)
+    \brief   void DIGITALIO_App(ULONG thread_input)
     Scan the IO to store it in RAM
     \param[in]  none
     \param[out] none
     \retval     none
 */
-void DIGITALIO_App(void){
+void DIGITALIO_App(ULONG thread_input){
     digitalIO_Init();
     while(1){
         if(gpio_input_bit_get(GPIOG, GPIO_PIN_3) == RESET){

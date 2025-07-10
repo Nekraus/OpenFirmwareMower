@@ -50,7 +50,7 @@ bool write_then_readLCD(int param_1);
     \param[out] none
     \retval     none
 */
-void DISPLAY_App(void){
+void DISPLAY_App(ULONG thread_input){
     rcu_periph_clock_enable(RCU_GPIOA);
     rcu_periph_clock_enable(RCU_GPIOB);
     rcu_periph_clock_enable(RCU_GPIOD);

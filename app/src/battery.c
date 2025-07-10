@@ -232,7 +232,7 @@ void BATTERY_TimerIRQ(void)
     \param[out] none
     \retval     none
 */
-void BATTERY_App(void){
+void BATTERY_App(ULONG thread_input){
     /* Set CS */
     battery_Set_Mode(MODE_DS);
     if(battery_u32StatusReceived == 1){
