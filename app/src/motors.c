@@ -95,72 +95,79 @@ void motors_prepareInit_3(MOTORS_SELECT_e p_eSelectedMotor);
 
 
 void MOTORS_App(void){
+    uint32_t wakeTime;
+    const uint32_t wakePeriod = 10;
+
     tx_semaphore_create(&motors_UART_RX_semaphore,"motors_UART_RX_semaphore", 1);
+
     motors_Init();
+
     while(1){
-    static MOTORS_STATE_e state = 0;
-    switch (state){
-        case MOTORS_STATE_INIT:
-            motors_selectMotor(MOTORS_SELECT_RIGHT);
-            tx_thread_sleep(1);
-            motors_prepareInit_1(MOTORS_SELECT_RIGHT);
-            tx_thread_sleep(10);
-            motors_prepareInit_2(MOTORS_SELECT_RIGHT);
-            tx_thread_sleep(10);
-            motors_prepareInit_3(MOTORS_SELECT_RIGHT);
-            tx_thread_sleep(10);
+        static MOTORS_STATE_e state = 0;
+        switch (state){
+            case MOTORS_STATE_INIT:
+                motors_selectMotor(MOTORS_SELECT_RIGHT);
+                tx_thread_sleep(1);
+                motors_prepareInit_1(MOTORS_SELECT_RIGHT);
+                tx_thread_sleep(10);
+                motors_prepareInit_2(MOTORS_SELECT_RIGHT);
+                tx_thread_sleep(10);
+                motors_prepareInit_3(MOTORS_SELECT_RIGHT);
+                tx_thread_sleep(10);
 
-            motors_selectMotor(MOTORS_SELECT_LEFT);
-            tx_thread_sleep(1);
-            motors_prepareInit_1(MOTORS_SELECT_LEFT);
-            tx_thread_sleep(10);
-            motors_prepareInit_2(MOTORS_SELECT_LEFT);
-            tx_thread_sleep(10);
-            motors_prepareInit_3(MOTORS_SELECT_LEFT);
-            tx_thread_sleep(10);
+                motors_selectMotor(MOTORS_SELECT_LEFT);
+                tx_thread_sleep(1);
+                motors_prepareInit_1(MOTORS_SELECT_LEFT);
+                tx_thread_sleep(10);
+                motors_prepareInit_2(MOTORS_SELECT_LEFT);
+                tx_thread_sleep(10);
+                motors_prepareInit_3(MOTORS_SELECT_LEFT);
+                tx_thread_sleep(10);
 
-            motors_selectMotor(MOTORS_SELECT_MOWER);
-            tx_thread_sleep(1);
-            motors_prepareInit_1(MOTORS_SELECT_MOWER);
-            tx_thread_sleep(10);
-            motors_prepareInit_2(MOTORS_SELECT_MOWER);
-            tx_thread_sleep(10);
-            motors_prepareInit_3(MOTORS_SELECT_MOWER);
-            tx_thread_sleep(10);
+                motors_selectMotor(MOTORS_SELECT_MOWER);
+                tx_thread_sleep(1);
+                motors_prepareInit_1(MOTORS_SELECT_MOWER);
+                tx_thread_sleep(10);
+                motors_prepareInit_2(MOTORS_SELECT_MOWER);
+                tx_thread_sleep(10);
+                motors_prepareInit_3(MOTORS_SELECT_MOWER);
+                tx_thread_sleep(10);
 
-            state = MOTORS_STATE_LOOP;
-
-            break;
-        
-        case MOTORS_STATE_LOOP:
-
-            motors_selectMotor(MOTORS_SELECT_RIGHT);
-            tx_thread_sleep(1);
-            motors_SendSpeedCmd(MOTORS_SELECT_RIGHT, motors_s16SetRightSpeed ,0);
-            tx_semaphore_get(&motors_UART_RX_semaphore,TX_WAIT_FOREVER);
-            motors_Decode(rxbuffer);
-            motors_ReloadRxDMA();
+                state = MOTORS_STATE_LOOP;
+                //Initialise the wakeTime variable with the current time
+                wakePeriod = tx_time_get();
+                break;
             
-            motors_selectMotor(MOTORS_SELECT_LEFT);
-            tx_thread_sleep(1);
-            motors_SendSpeedCmd(MOTORS_SELECT_LEFT, motors_s16SetLeftSpeed, 0);
-            tx_semaphore_get(&motors_UART_RX_semaphore,TX_WAIT_FOREVER);
-            motors_Decode(rxbuffer);
-            motors_ReloadRxDMA();
+            case MOTORS_STATE_LOOP:
 
-            motors_selectMotor(MOTORS_SELECT_MOWER);
-            tx_thread_sleep(1);
-            motors_SendSpeedCmd(MOTORS_SELECT_MOWER, motors_s16SetMowSpeed, 0);
-            tx_semaphore_get(&motors_UART_RX_semaphore,TX_WAIT_FOREVER);
-            motors_Decode(rxbuffer);
-            motors_ReloadRxDMA();
-            tx_thread_sleep(7);
+                motors_selectMotor(MOTORS_SELECT_RIGHT);
+                tx_thread_sleep(1);
+                motors_SendSpeedCmd(MOTORS_SELECT_RIGHT, motors_s16SetRightSpeed ,0);
+                tx_semaphore_get(&motors_UART_RX_semaphore,TX_WAIT_FOREVER);
+                motors_Decode(rxbuffer);
+                motors_ReloadRxDMA();
+                
+                motors_selectMotor(MOTORS_SELECT_LEFT);
+                tx_thread_sleep(1);
+                motors_SendSpeedCmd(MOTORS_SELECT_LEFT, motors_s16SetLeftSpeed, 0);
+                tx_semaphore_get(&motors_UART_RX_semaphore,TX_WAIT_FOREVER);
+                motors_Decode(rxbuffer);
+                motors_ReloadRxDMA();
 
-            break;
-        
-        default:
-            break;
-        }
+                motors_selectMotor(MOTORS_SELECT_MOWER);
+                tx_thread_sleep(1);
+                motors_SendSpeedCmd(MOTORS_SELECT_MOWER, motors_s16SetMowSpeed, 0);
+                tx_semaphore_get(&motors_UART_RX_semaphore,TX_WAIT_FOREVER);
+                motors_Decode(rxbuffer);
+                motors_ReloadRxDMA();
+                /* 10 ms task*/
+                thread_sleepUntil(&wakeTime, wakePeriod);
+
+                break;
+            
+            default:
+                break;
+            }
     }
 }
 

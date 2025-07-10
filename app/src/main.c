@@ -34,8 +34,12 @@ OF SUCH DAMAGE.
 #include "../include/battery.h"
 #include "../include/adc.h"
 
+#include  <errno.h>
+#include  <sys/unistd.h> 
 
 TX_THREAD adc_thread;
+
+void usart0_init(void);
 
 /*!
     \brief      main function
@@ -45,23 +49,60 @@ TX_THREAD adc_thread;
 */
 int main(void)
 {
+    /* init usart0 for printf */
+    usart0_init();
     /* Enter the ThreadX kernel. */
     tx_kernel_enter( );
 }
 
 void tx_application_define(void *first_unused_memory)
 {
-    /* Create my_thread! */
+    TX_BYTE_POOL *byte_pool = (TX_BYTE_POOL*)memory_ptr;
+    CHAR *pointer;
+
+
+    if (tx_byte_allocate(byte_pool, (VOID**) &pointer,
+                        1024, TX_NO_WAIT) != TX_SUCCESS)
+    {
+        //return TX_POOL_ERROR;
+    }
+
     tx_thread_create(&adc_thread, "ADC",
-    ADC_App, 0, first_unused_memory, 1024,
+    ADC_App, 0, pointer, 1024,
     3, 3, TX_NO_TIME_SLICE, TX_AUTO_START);
+
+    
+    if (tx_byte_allocate(byte_pool, (VOID**) &pointer,
+                        1024, TX_NO_WAIT) != TX_SUCCESS)
+    {
+        //return TX_POOL_ERROR;
+    }
 }
 
 
+void thread_sleepUntil(uint32_t * const previousWakeTime, const uint32_t timeIncrement)
+{
+    const uint32_t currentTime = tx_time_get();
+
+    tx_thread_sleep(timeIncrement - (currentTime - *previousWakeTime));
+
+    *previousWakeTime = *previousWakeTime + timeIncrement;
+}
+
+void usart0_init(void){
+    /* USART configuration */
+    rcu_periph_clock_enable(RCU_GPIOA);
+    rcu_periph_clock_enable(RCU_USART0);
+    gpio_init(GPIOA, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_9);
+    gpio_init(GPIOA, GPIO_MODE_IN_FLOATING, GPIO_OSPEED_50MHZ, GPIO_PIN_10);
+    usart_deinit(USART0);
+    usart_baudrate_set(USART0, 115200U);
+    usart_receive_config(USART0, USART_RECEIVE_ENABLE);
+    usart_transmit_config(USART0, USART_TRANSMIT_ENABLE);
+    usart_enable(USART0);
+})
 
 /* retarget the gcc's C library printf function to the USART */
-#include  <errno.h>
-#include  <sys/unistd.h> // STDOUT_FILENO, STDERR_FILENO
 int _write(int file, char *data, int len)
 {
    if ((file != STDOUT_FILENO) && (file != STDERR_FILENO))

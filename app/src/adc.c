@@ -69,16 +69,6 @@ void adc_Init(void){
     gpio_config();
     /* ADC configuration */
     adc_config();
-    /* USART configuration */
-    rcu_periph_clock_enable(RCU_GPIOA);
-    rcu_periph_clock_enable(RCU_USART0);
-    gpio_init(GPIOA, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_9);
-    gpio_init(GPIOA, GPIO_MODE_IN_FLOATING, GPIO_OSPEED_50MHZ, GPIO_PIN_10);
-    usart_deinit(USART0);
-    usart_baudrate_set(USART0, 115200U);
-    usart_receive_config(USART0, USART_RECEIVE_ENABLE);
-    usart_transmit_config(USART0, USART_TRANSMIT_ENABLE);
-    usart_enable(USART0);
 }
 
 
