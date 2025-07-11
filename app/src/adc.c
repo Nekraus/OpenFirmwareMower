@@ -25,7 +25,8 @@
 /* +-----------------------------------------------------------------------+ */
 /* |                         LOCAL VARIABLES                               | */
 /* +-----------------------------------------------------------------------+ */
-__IO uint16_t adc_value[10];
+uint16_t adc0_value[8];
+uint16_t adc2_value[2]
 
 uint16_t adc0_channel_sample(uint8_t channel);
 uint16_t adc2_channel_sample(uint8_t channel);
@@ -35,6 +36,7 @@ uint16_t adc2_channel_sample(uint8_t channel);
 void adc_timer_config(void);
 void gpio_config(void);
 void adc_config(void);
+void adc_dma_config(void);
 void adc_Init(void);
 /* +-----------------------------------------------------------------------+ */
 /* |                         PUBLIC FUNCTIONS                              | */
@@ -42,21 +44,20 @@ void adc_Init(void);
 
 void ADC_App(ULONG thread_input){
 
-    adc_timer_config();
     adc_Init();
 
     while(1){
 
-        // printf("Charger Voltage: %d (%1.2fV)\n", adc_value[0], adc_value[0]* 6.0 * 3.3f / 4095.f);
-        // printf("Temperature : %d (%1.2fV)\n", adc_value[1], adc_value[1] * 3.3f / 4095.f);
-        printf("Battery Voltage: %d (%1.2fV)\n", adc_value[2], adc_value[2] * 10 * 3.3f / 4095.f);
-        // printf(" DS: %d (%1.2fV)\n", adc_value[3], adc_value[3] * 3.3f / 4095.f);
-        // printf(" DS bis: %d (%1.2fV)\n", adc_value[7], adc_value[7] * 3.3f / 4095.f);
-        printf(" Discharge current: %d (%1.2fV)\n", adc_value[4], adc_value[4] * 3.3f / 4095.f /5.f/0.025f);
-        // printf(" Charge current: %d (%1.2fV)\n", adc_value[5], adc_value[5] * 3.3f / 4095.f /20.f/0.025f);
-        printf(" Mower Motor current: %d (%1.2fV)\n", adc_value[6], adc_value[6] * 3.3f / 4095.f /0.24f);
-        printf(" Right Motor current: %d (%1.2fV)\n", adc_value[8], adc_value[8] * 3.3f / 4095.f /0.24f);
-        printf(" Left Motor current: %d (%1.2fV)\n", adc_value[9], adc_value[9] * 3.3f / 4095.f /0.24f);
+        // printf("Charger Voltage: %d (%1.2fV)\n", adc0_value[0], adc0_value[0]* 6.0 * 3.3f / 4095.f);
+        // printf("Temperature : %d (%1.2fV)\n", adc0_value[1], adc0_value[1] * 3.3f / 4095.f);
+        printf("Battery Voltage: %d (%1.2fV)\n", adc0_value[2], adc0_value[2] * 10 * 3.3f / 4095.f);
+        // printf(" DS: %d (%1.2fV)\n", adc0_value[3], adc0_value[3] * 3.3f / 4095.f);
+        // printf(" DS bis: %d (%1.2fV)\n", adc0_value[7], adc0_value[7] * 3.3f / 4095.f);
+        printf(" Discharge current: %d (%1.2fV)\n", adc0_value[4], adc0_value[4] * 3.3f / 4095.f /5.f/0.025f);
+        // printf(" Charge current: %d (%1.2fV)\n", adc0_value[5], adc0_value[5] * 3.3f / 4095.f /20.f/0.025f);
+        printf(" Mower Motor current: %d (%1.2fV)\n", adc0_value[6], adc0_value[6] * 3.3f / 4095.f /0.24f);
+        printf(" Right Motor current: %d (%1.2fV)\n", adc2_value[8], adc2_value[0] * 3.3f / 4095.f /0.24f);
+        printf(" Left Motor current: %d (%1.2fV)\n", adc2_value[9], adc2_value[1] * 3.3f / 4095.f /0.24f);
         // printf("\n");
         tx_thread_sleep(10);
     }  
@@ -68,8 +69,12 @@ void ADC_App(ULONG thread_input){
 void adc_Init(void){
     /* GPIO configuration */
     gpio_config();
+    /* ADC timer configuration */
+    adc_timer_config();
     /* ADC configuration */
     adc_config();
+    /* DMA configuration*/
+    adc_dma_config();
 }
 
 
@@ -175,6 +180,10 @@ void adc_config(void)
     adc_regular_channel_config(ADC2, 0U, ADC_CHANNEL_4, ADC_SAMPLETIME_239POINT5);
     adc_regular_channel_config(ADC2, 1U, ADC_CHANNEL_6, ADC_SAMPLETIME_239POINT5);
 
+    /* ADC DMA function enable */
+    adc_dma_mode_enable(ADC0);
+    adc_dma_mode_enable(ADC2);
+
     /* enable ADC interface */
     adc_enable(ADC0);
     adc_enable(ADC2);
@@ -187,6 +196,49 @@ void adc_config(void)
     adc_external_trigger_config(ADC0, ADC_REGULAR_CHANNEL, ENABLE);
     adc_external_trigger_config(ADC2, ADC_REGULAR_CHANNEL, ENABLE);
  
+}
+
+void adc_dma_config(void){
+    /* enable DMA0 clock */
+    rcu_periph_clock_enable(RCU_DMA0);
+    rcu_periph_clock_enable(RCU_DMA1);
+    /* ADC_DMA_channel configuration */
+    dma_parameter_struct dma_data_parameter;
+    
+    /* ADC DMA_channel configuration */
+    dma_deinit(DMA0, DMA_CH0);
+    
+    /* initialize DMA single data mode */
+    dma_data_parameter.periph_addr  = (uint32_t)(&ADC_RDATA(ADC0));
+    dma_data_parameter.periph_inc   = DMA_PERIPH_INCREASE_DISABLE;
+    dma_data_parameter.memory_addr  = (uint32_t)(&adc_value);
+    dma_data_parameter.memory_inc   = DMA_MEMORY_INCREASE_ENABLE;
+    dma_data_parameter.periph_width = DMA_PERIPHERAL_WIDTH_16BIT;
+    dma_data_parameter.memory_width = DMA_MEMORY_WIDTH_16BIT;  
+    dma_data_parameter.direction    = DMA_PERIPHERAL_TO_MEMORY;
+    dma_data_parameter.number       = 8;
+    dma_data_parameter.priority     = DMA_PRIORITY_HIGH;
+    dma_init(DMA0, DMA_CH0, &dma_data_parameter);
+
+
+    /* ADC DMA_channel configuration */
+    dma_deinit(DMA1, DMA_CH4);
+    
+    /* initialize DMA single data mode */
+    dma_data_parameter.periph_addr  = (uint32_t)(&ADC_RDATA(ADC02));
+    dma_data_parameter.periph_inc   = DMA_PERIPH_INCREASE_DISABLE;
+    dma_data_parameter.memory_addr  = (uint32_t)(&adc_value);
+    dma_data_parameter.memory_inc   = DMA_MEMORY_INCREASE_ENABLE;
+    dma_data_parameter.periph_width = DMA_PERIPHERAL_WIDTH_16BIT;
+    dma_data_parameter.memory_width = DMA_MEMORY_WIDTH_16BIT;  
+    dma_data_parameter.direction    = DMA_PERIPHERAL_TO_MEMORY;
+    dma_data_parameter.number       = 2;
+    dma_data_parameter.priority     = DMA_PRIORITY_HIGH;
+    dma_init(DMA1, DMA_CH4, &dma_data_parameter);
+
+    /* enable DMA channel */
+    dma_channel_enable(DMA0, DMA_CH0);
+    dma_channel_enable(DMA1, DMA_CH4);
 }
 
 
