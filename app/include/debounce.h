@@ -1,13 +1,12 @@
 /*
- * digitalIO.h 
+ * debounce.h 
  *
- *  Created on: 03/10/2024 
+ *  Created on: 11/07/2025 
  *      Author: Bruno Lecornu 
  */
 
-#ifndef DIGITALIO_H
-#define DIGITALIO_H
-
+#ifndef DEBOUNCE_H
+#define DEBOUNCE_H
 #include "main.h"
 /* +-----------------------------------------------------------------------+ */
 /* |                        CONSTANTES / MACROS                            | */
@@ -17,21 +16,10 @@
 /* |                            TYPEDEFS                                   | */
 /* +-----------------------------------------------------------------------+ */
 typedef struct {
-    bool start_button; // PE12
-    bool home_button; // PG7
-    bool return_button; // PG6
-    bool up_button; // PG5
-    bool down_button; // PG4
-    bool ok_button; // PG3
-    bool left_bumper; // PC6   
-    bool right_bumper; // PC7
-    bool left_up; // PC8
-    bool right_up; // PC9
-    bool charger_connected; // PD3
-    bool rain_sensor;  // PE9
-    bool flip_sensor; // PA8
-    bool estop; // PG12
-} inputs_t;
+    uint32_t gpio_periph;
+    uint32_t pin;
+    uint16_t state;
+} button_t;
 /* +-----------------------------------------------------------------------+ */
 /* |                         GLOBAL VARIABLES                              | */
 /* +-----------------------------------------------------------------------+ */
@@ -39,8 +27,6 @@ typedef struct {
 /* +-----------------------------------------------------------------------+ */
 /* |                         PUBLIC FUNCTIONS                              | */
 /* +-----------------------------------------------------------------------+ */
-
-void DIGITALIO_App(ULONG thread_input);
-
-void DIGITALIO_GetInputs(inputs_t *p_psInputs);
-#endif /* DIGITALIO_H*/
+void init_button(button_t *p_sbtn, uint32_t p_gpio_periph, uint32_t p_pin);
+bool debounce(button_t *p_sbtn);
+#endif /* DEBOUNCE_H*/

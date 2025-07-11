@@ -95,12 +95,6 @@ void DISPLAY_App(ULONG thread_input){
     display_send_cmd(6);
     tx_thread_sleep(10);
 
-    // int i;
-    // for (i = 0; i < 256; i++) {
-    //     if (write_then_readLCD(i & 0xff)) {
-    //         printf("fuck");
-    //     }
-    // }
     gpio_bit_reset(GPIOA,GPIO_PIN_11);
 
     display_writeStringLineColumn(hello,0,0);

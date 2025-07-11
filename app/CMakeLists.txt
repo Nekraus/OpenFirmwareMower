@@ -11,6 +11,7 @@ set(SOURCES
     src/system_gd32f30x.c
     src/newlib_nano.c
     src/adc.c
+    src/debounce.c
 )
 
 add_executable(gd32_openfirmwaremower
