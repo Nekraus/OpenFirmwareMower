@@ -19,3 +19,12 @@ sudo dnf install gcc-aarch64-linux-gnu -y
 sudo dnf install gcc-arm-linux-gnu -y
 
 ```
+
+# Build
+
+```bash
+
+mkdir build && cd build
+cmake .. && make
+
+```
