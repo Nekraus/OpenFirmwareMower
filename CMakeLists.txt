@@ -11,5 +11,6 @@ include(cmake/utilities.cmake)
 # Define the Project
 project(gd32_openfirmwaremower_main C ASM)
 
+add_subdirectory(ros/microros)
 add_subdirectory(lib)
 add_subdirectory(app)
