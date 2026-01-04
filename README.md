@@ -18,6 +18,7 @@ sudo dnf install arm-none-eabi-gcc-cs-c++ -y
 sudo dnf install arm-none-eabi-newlib -y
 sudo dnf install gcc-aarch64-linux-gnu -y
 sudo dnf install gcc-arm-linux-gnu -y
+sudo dnf install openocd -y
 
 ```
 

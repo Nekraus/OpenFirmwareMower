@@ -1,0 +1,37 @@
+{
+  "tasks": [
+    {
+      "type": "shell",
+      "label": "ST-LINKv2 flash",
+      "command": "st-flash",
+      "args": [
+        "write",
+        "build/app/gd32_openfirmwaremower.bin",
+        "0x08000000"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Build + Flash",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "CMake: clean rebuild",
+        "ST-LINKv2 flash",
+      ]
+    },
+    {
+      "type": "cmake",
+      "label": "CMake: clean rebuild",
+      "command": "cleanRebuild",
+      "targets": [
+        "all"
+      ],
+      "group": "build",
+      "problemMatcher": [],
+      "detail": "CMake template clean rebuild task"
+    },
+  ]
+}

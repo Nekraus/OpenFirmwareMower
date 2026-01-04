@@ -1,0 +1,92 @@
+{
+  "configurations": [
+    {
+      "cwd": "${workspaceRoot}",
+      "executable": "${workspaceFolder}/build/app/gd32_openfirmwaremower.elf",
+      "name": "Debug with OpenOCD",
+      "request": "launch",
+      "type": "cortex-debug",
+      "servertype": "openocd",
+      "svdFile": "${workspaceFolder}/debug/GD32F30x_HD.svd",
+      "configFiles": [
+        "interface/stlink-v2.cfg",
+        "target/stm32f3x.cfg"
+      ],
+      "gdbTarget": ":3333",
+      "gdbPath": "gdb",
+      "searchDir": [],
+      "runToEntryPoint": "main",
+      "showDevDebugOutput": "none",
+      "preLaunchTask": "Build + Flash"
+    },
+    // {
+    //   "name": "Build & Debug Microcontroller - ST-Link",
+    //   "cwd": "${workspaceFolder}",
+    //   "type": "cortex-debug",
+    //   "executable": "${workspaceFolder}/build/app/gd32_openfirmwaremower.elf", // Change to your project name
+    //   "request": "launch",
+    //   "servertype": "openocd",
+    //   "device": "GD32F303Zx", //MCU used
+    //   "interface": "swd",
+    //   "serialNumber": "", //Set ST-Link ID if you use multiple at the same time
+    //   "runToEntryPoint": "main",
+    //   "svdFile": "${workspaceFolder}/debug/GD32F30x_HD.svd",
+    //   "v1": false, //Change it depending on ST Link version
+    //   "serverpath": "/usr/bin/openocd",
+    //   "stm32cubeprogrammer": "${config:STM32VSCodeExtension.cubeCLT.path}/STM32CubeProgrammer/bin",
+    //   "stlinkPath": "${config:STM32VSCodeExtension.cubeCLT.path}/STLink-gdb-server/bin/ST-LINK_gdbserver",
+    //   "armToolchainPath": "${config:STM32VSCodeExtension.cubeCLT.path}/GNU-tools-for-STM32/bin",
+    //   "gdbPath": "${config:STM32VSCodeExtension.cubeCLT.path}/GNU-tools-for-STM32/bin/arm-none-eabi-gdb",
+    //   "configFiles": [
+    //     "/usr/share/openocd/scripts/interface/stlink.cfg",
+    //     "/usr/share/openocd/scripts/target/stm32g4x.cfg"
+    //   ],
+    //   //"preLaunchTask": "Build + Flash"
+    //   /* If you use external loader, add additional arguments */
+    //   //"serverArgs": ["--extload", "path/to/ext/loader.stldr"],
+    //   "swoConfig": {
+    //     "enabled": true,
+    //     "cpuFrequency": 170000000, //CPU frequency in Hz
+    //     "swoFrequency": 1000000, //SWO frequency in Hz
+    //     "source": "probe", //Source of SWO data, can be "probe" or "file"
+    //     "decoders": [
+    //       {
+    //         "label": "ITM port 0 output",
+    //         "type": "console",
+    //         "port": 0, //ITM port number
+    //         "showOnStartup": true,
+    //         "encoding": "ascii"
+    //       }
+    //     ]
+    //   }
+    // },
+    // {
+    //   "name": "Attach to Microcontroller - ST-Link",
+    //   "cwd": "${workspaceFolder}",
+    //   "type": "cortex-debug",
+    //   "executable": "${command:cmake.launchTargetPath}",
+    //   // Let CMake extension decide executable: "${command:cmake.launchTargetPath}"
+    //   // Or fixed file path: "${workspaceFolder}/path/to/filename.elf"
+    //   "request": "attach",
+    //   "servertype": "stlink",
+    //   "device": "STM32G474RETx", //MCU used
+    //   "interface": "swd",
+    //   "serialNumber": "", //Set ST-Link ID if you use multiple at the same time
+    //   "runToEntryPoint": "main",
+    //   "svdFile": "${config:STM32VSCodeExtension.cubeCLT.path}/STMicroelectronics_CMSIS_SVD/STM32G474.svd",
+    //   "v1": false, //Change it depending on ST Link version
+    //   "serverpath": "${config:STM32VSCodeExtension.cubeCLT.path}/STLink-gdb-server/bin/ST-LINK_gdbserver",
+    //   "stm32cubeprogrammer": "${config:STM32VSCodeExtension.cubeCLT.path}/STM32CubeProgrammer/bin",
+    //   "stlinkPath": "${config:STM32VSCodeExtension.cubeCLT.path}/STLink-gdb-server/bin/ST-LINK_gdbserver",
+    //   "armToolchainPath": "${config:STM32VSCodeExtension.cubeCLT.path}/GNU-tools-for-STM32/bin",
+    //   "gdbPath": "${config:STM32VSCodeExtension.cubeCLT.path}/GNU-tools-for-STM32/bin/arm-none-eabi-gdb",
+    //   "serverArgs": [
+    //     "-m",
+    //     "0",
+    //   ],
+    //   /* If you use external loader, add additional arguments */
+    //   //"serverArgs": ["--extload", "path/to/ext/loader.stldr"],
+    // }
+  ],
+  "version": "2.0.0"
+}
