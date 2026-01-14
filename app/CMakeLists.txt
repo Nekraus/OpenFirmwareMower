@@ -30,8 +30,10 @@ target_link_libraries(gd32_openfirmwaremower
 target_include_directories(gd32_openfirmwaremower
     PUBLIC
     include/
+    ../ros/microros/include
 )
 
+# set_target_linker(gd32_openfirmwaremower  ${CMAKE_CURRENT_SOURCE_DIR}/startup/GD32F303RC.ld)
 set_target_linker(gd32_openfirmwaremower  ${CMAKE_CURRENT_SOURCE_DIR}/startup/GD32F303ZE.ld)
 
 post_build(gd32_openfirmwaremower)

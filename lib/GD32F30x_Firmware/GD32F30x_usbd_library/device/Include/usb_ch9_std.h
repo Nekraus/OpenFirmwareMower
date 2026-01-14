@@ -2,11 +2,11 @@
     \file    usb_ch9_std.h
     \brief   USB 2.0 standard defines
 
-   \version 2024-12-20, V3.0.1, firmware for GD32F30x
+   \version 2025-7-31, V3.0.2, firmware for GD32F30x
 */
 
 /*
-    Copyright (c) 2024, GigaDevice Semiconductor Inc.
+    Copyright (c) 2025, GigaDevice Semiconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification, 
 are permitted provided that the following conditions are met:
@@ -105,24 +105,24 @@ enum _usb_desctype {
 /* USB endpoint descriptor bmAttributes bit definitions */
 /* bits 1..0 : transfer type */
 enum _usbx_type {
-    USB_EP_ATTR_CTL  = 0x0U,                      /*!< USB endpoint control attributes*/
-    USB_EP_ATTR_ISO  = 0x1U,                      /*!< USB endpoint isochronous attributes*/
-    USB_EP_ATTR_BULK = 0x2U,                      /*!< USB endpoint bulk attributes*/
-    USB_EP_ATTR_INT  = 0x3U                       /*!< USB endpoint interrupt attributes*/
+    USB_EP_ATTR_CTL  = 0x0U,                      /*!< USB endpoint control attributes */
+    USB_EP_ATTR_ISO  = 0x1U,                      /*!< USB endpoint isochronous attributes */
+    USB_EP_ATTR_BULK = 0x2U,                      /*!< USB endpoint bulk attributes */
+    USB_EP_ATTR_INT  = 0x3U                       /*!< USB endpoint interrupt attributes */
 };
 
 /* bits 3..2 : Sync type (only if ISOCHRONOUS) */
-#define USB_EP_ATTR_NOSYNC                 0x00U  /*!< USB endpoint no SYNC attributes*/
-#define USB_EP_ATTR_ASYNC                  0x04U  /*!< USB endpoint ASYNC attributes*/
-#define USB_EP_ATTR_ADAPTIVE               0x08U  /*!< USB endpoint adaptive attributes*/
-#define USB_EP_ATTR_SYNC                   0x0CU  /*!< USB endpoint SYNC attributes*/
-#define USB_EP_ATTR_SYNCTYPE               0x0CU  /*!< USB endpoint SYNC type attributes*/
+#define USB_EP_ATTR_NOSYNC                 0x00U  /*!< USB endpoint no SYNC attributes */
+#define USB_EP_ATTR_ASYNC                  0x04U  /*!< USB endpoint ASYNC attributes */
+#define USB_EP_ATTR_ADAPTIVE               0x08U  /*!< USB endpoint adaptive attributes */
+#define USB_EP_ATTR_SYNC                   0x0CU  /*!< USB endpoint SYNC attributes */
+#define USB_EP_ATTR_SYNCTYPE               0x0CU  /*!< USB endpoint SYNC type attributes */
 
 /* bits 5..4 : usage type (only if ISOCHRONOUS) */
-#define USB_EP_ATTR_DATA                   0x00U  /*!< USB endpoint data attributes*/
-#define USB_EP_ATTR_FEEDBACK               0x10U  /*!< USB endpoint feedback attributes*/
-#define USB_EP_ATTR_IMPLICIT_FEEDBACK_DATA 0x20U  /*!< USB endpoint implicit feedback attributes*/
-#define USB_EP_ATTR_USAGETYPE              0x30U  /*!< USB endpoint usage type attributes*/
+#define USB_EP_ATTR_DATA                   0x00U  /*!< USB endpoint data attributes */
+#define USB_EP_ATTR_FEEDBACK               0x10U  /*!< USB endpoint feedback attributes */
+#define USB_EP_ATTR_IMPLICIT_FEEDBACK_DATA 0x20U  /*!< USB endpoint implicit feedback attributes */
+#define USB_EP_ATTR_USAGETYPE              0x30U  /*!< USB endpoint usage type attributes */
 
 #pragma pack(1)
 

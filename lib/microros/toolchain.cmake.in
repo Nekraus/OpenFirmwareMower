@@ -12,5 +12,5 @@ set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 set(CMAKE_C_COMPILER @CMAKE_C_COMPILER@)
 set(CMAKE_CXX_COMPILER @CMAKE_CXX_COMPILER@)
 
-set(CMAKE_C_FLAGS_INIT "@CFLAGS@ -Wno-error -Wno-int-conversion -Wno-unused-function -Wno-implicit-function-declaration -DCLOCK_MONOTONIC=0" CACHE STRING "" FORCE)
+set(CMAKE_C_FLAGS_INIT "@CFLAGS@ -Wno-error -Wno-int-conversion  -Wno-unused-function -Wno-implicit-function-declaration -DCLOCK_MONOTONIC=0" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS_INIT "@CXXFLAGS@ -Wno-error -Wno-unused-function -DCLOCK_MONOTONIC=0" CACHE STRING "" FORCE)

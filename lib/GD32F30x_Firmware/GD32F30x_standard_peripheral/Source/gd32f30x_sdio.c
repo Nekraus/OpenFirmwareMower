@@ -2,11 +2,11 @@
     \file    gd32f30x_sdio.c
     \brief   SDIO driver
 
-   \version 2024-12-20, V3.0.1, firmware for GD32F30x
+   \version 2025-7-31, V3.0.2, firmware for GD32F30x
 */
 
 /*
-    Copyright (c) 2024, GigaDevice Semiconductor Inc.
+    Copyright (c) 2025, GigaDevice Semiconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification, 
 are permitted provided that the following conditions are met:
@@ -192,6 +192,9 @@ void sdio_clock_disable(void)
 void sdio_command_response_config(uint32_t cmd_index, uint32_t cmd_argument, uint32_t response_type)
 {
     uint32_t cmd_config = 0U;
+
+    /* disable the CSM */
+    SDIO_CMDCTL &= ~SDIO_CMDCTL_CSMEN;
     /* reset the command index, command argument and response type */
     SDIO_CMDAGMT &= ~SDIO_CMDAGMT_CMDAGMT;
     SDIO_CMDAGMT = cmd_argument;

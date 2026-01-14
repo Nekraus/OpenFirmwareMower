@@ -2,11 +2,11 @@
     \file    usbd_msc_scsi.c
     \brief   USB SCSI layer functions
 
-   \version 2024-12-20, V3.0.1, firmware for GD32F30x
+   \version 2025-7-31, V3.0.2, firmware for GD32F30x
 */
 
 /*
-    Copyright (c) 2024, GigaDevice Semiconductor Inc.
+    Copyright (c) 2025, GigaDevice Semiconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification, 
 are permitted provided that the following conditions are met:
@@ -302,14 +302,14 @@ static int8_t scsi_read_capacity10(usb_dev *udev, uint8_t lun, uint8_t *params)
     msc->scsi_blk_nbr[lun] = usbd_mem_fops->mem_block_len[lun];
     msc->scsi_blk_size[lun] = usbd_mem_fops->mem_block_size[lun];
 
-    msc->bbb_data[0] = (uint8_t)(blk_num >> 24U);
-    msc->bbb_data[1] = (uint8_t)(blk_num >> 16U);
-    msc->bbb_data[2] = (uint8_t)(blk_num >> 8U);
+    msc->bbb_data[0] = (uint8_t)(blk_num >> 24);
+    msc->bbb_data[1] = (uint8_t)(blk_num >> 16);
+    msc->bbb_data[2] = (uint8_t)(blk_num >> 8);
     msc->bbb_data[3] = (uint8_t)(blk_num);
 
-    msc->bbb_data[4] = (uint8_t)(msc->scsi_blk_size[lun] >> 24U);
-    msc->bbb_data[5] = (uint8_t)(msc->scsi_blk_size[lun] >> 16U);
-    msc->bbb_data[6] = (uint8_t)(msc->scsi_blk_size[lun] >> 8U);
+    msc->bbb_data[4] = (uint8_t)(msc->scsi_blk_size[lun] >> 24);
+    msc->bbb_data[5] = (uint8_t)(msc->scsi_blk_size[lun] >> 16);
+    msc->bbb_data[6] = (uint8_t)(msc->scsi_blk_size[lun] >> 8);
     msc->bbb_data[7] = (uint8_t)(msc->scsi_blk_size[lun]);
 
     msc->bbb_datalen = 8U;
@@ -496,10 +496,10 @@ static int8_t scsi_read10(usb_dev *udev, uint8_t lun, uint8_t *params)
             return -1;
         }
 
-        msc->scsi_blk_addr = (params[2] << 24U) | (params[3] << 16U) | \
-                             (params[4] << 8U) |  params[5];
+        msc->scsi_blk_addr = (params[2] << 24) | (params[3] << 16) | \
+                             (params[4] << 8) |  params[5];
 
-        msc->scsi_blk_len = (params[7] << 8U) | params[8];
+        msc->scsi_blk_len = (params[7] << 8) | params[8];
 
         if(scsi_check_address_range(udev, lun, msc->scsi_blk_addr, (uint16_t)msc->scsi_blk_len) < 0) {
             return -1; /* error */
@@ -557,10 +557,10 @@ static int8_t scsi_write10(usb_dev *udev, uint8_t lun, uint8_t *params)
             return -1;
         }
 
-        msc->scsi_blk_addr = (params[2] << 24U) | (params[3] << 16U) | \
-                             (params[4] << 8U) |  params[5];
+        msc->scsi_blk_addr = (params[2] << 24) | (params[3] << 16) | \
+                             (params[4] << 8) |  params[5];
 
-        msc->scsi_blk_len = (params[7] << 8U) | params[8];
+        msc->scsi_blk_len = (params[7] << 8) | params[8];
 
         /* check if LBA address is in the right range */
         if(scsi_check_address_range(udev, lun, msc->scsi_blk_addr, (uint16_t)msc->scsi_blk_len) < 0) {

@@ -2,11 +2,11 @@
     \file    usbd_msc_core.c
     \brief   USB MSC device class core functions
 
-   \version 2024-12-20, V3.0.1, firmware for GD32F30x
+   \version 2025-7-31, V3.0.2, firmware for GD32F30x
 */
 
 /*
-    Copyright (c) 2024, GigaDevice Semiconductor Inc.
+    Copyright (c) 2025, GigaDevice Semiconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification, 
 are permitted provided that the following conditions are met:
@@ -189,8 +189,6 @@ usb_desc msc_desc = {
     .strings     = usbd_msc_strings
 };
 
-static uint8_t usbd_msc_maxlun = 0U;
-
 /*!
     \brief      initialize the MSC device
     \param[in]  udev: pointer to USB device instance
@@ -208,11 +206,19 @@ static uint8_t msc_core_init(usb_dev *udev, uint8_t config_index)
 
     udev->class_data[USBD_MSC_INTERFACE] = (void *)&msc_handler;
 
+#ifndef USBD_DOUBLE_BUFFER_ENABLE
     /* initialize TX endpoint */
     usbd_ep_init(udev, EP_BUF_SNG, BULK_TX_ADDR, &(msc_config_desc.msc_epin));
 
     /* initialize RX endpoint */
     usbd_ep_init(udev, EP_BUF_SNG, BULK_RX_ADDR, &(msc_config_desc.msc_epout));
+#else
+    /* initialize TX endpoint */
+    usbd_ep_init(udev, EP_BUF_DBL, BULK_TX_ADDR, &(msc_config_desc.msc_epin));
+
+    /* initialize RX endpoint */
+    usbd_ep_init(udev, EP_BUF_DBL, BULK_RX_ADDR, &(msc_config_desc.msc_epout));
+#endif /* !USBD_DOUBLE_BUFFER_ENABLE */
 
     udev->ep_transc[EP_ID(MSC_IN_EP)][TRANSC_IN] = msc_class.data_in;
     udev->ep_transc[MSC_OUT_EP][TRANSC_OUT] = msc_class.data_out;
@@ -256,6 +262,8 @@ static uint8_t msc_core_deinit(usb_dev *udev, uint8_t config_index)
 */
 static uint8_t msc_core_req(usb_dev *udev, usb_req *req)
 {
+    static uint8_t usbd_msc_maxlun = 0U;
+
     switch(req->bRequest) {
     case BBB_GET_MAX_LUN:
         if((0U == req->wValue) &&

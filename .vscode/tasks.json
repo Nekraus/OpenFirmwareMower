@@ -3,11 +3,22 @@
     {
       "type": "shell",
       "label": "ST-LINKv2 flash",
-      "command": "st-flash",
+      "command": "openocd",
       "args": [
-        "write",
-        "build/app/gd32_openfirmwaremower.bin",
-        "0x08000000"
+        "-f",
+        "interface/stlink-v2.cfg",
+        "-f",
+        "target/stm32f3x.cfg",
+        "-c",
+        "init",
+        "-c",
+        "reset halt",
+        "-c",
+        "flash write_image erase build/app/gd32_openfirmwaremower.bin 0x08000000",
+        "-c",
+        "reset",
+        "-c",
+        "exit"
       ],
       "options": {
         "cwd": "${workspaceFolder}"

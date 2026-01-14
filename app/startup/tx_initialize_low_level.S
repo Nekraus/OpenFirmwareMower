@@ -33,8 +33,8 @@
     .global     __tx_SysTickHandler                 // SysTick
     .global     __tx_IntHandler                     // Int 0
 
-SYSTEM_CLOCK      =   120000000 
-SYSTICK_CYCLES    =   ((SYSTEM_CLOCK / 1000) -1)
+SYSTEM_CLOCK      =   120000000
+SYSTICK_CYCLES    =   ((SYSTEM_CLOCK / 100) -1)
 
     .text 32
     .align 4

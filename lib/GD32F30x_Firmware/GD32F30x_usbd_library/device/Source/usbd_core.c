@@ -2,11 +2,11 @@
     \file    usbd_core.c
     \brief   USB device driver
 
-   \version 2024-12-20, V3.0.1, firmware for GD32F30x
+   \version 2025-7-31, V3.0.2, firmware for GD32F30x
 */
 
 /*
-    Copyright (c) 2024, GigaDevice Semiconductor Inc.
+    Copyright (c) 2025, GigaDevice Semiconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification, 
 are permitted provided that the following conditions are met:
@@ -69,7 +69,7 @@ void usbd_init(usb_dev *udev, usb_desc *desc, usb_class *usbc)
     udev->ep_transc[0][TRANSC_IN] = _usb_in0_transc;
 
     /* configure power management */
-    udev->pm.power_mode = (udev->desc->config_desc[7] & 0x40U) >> 5U;
+    udev->pm.power_mode = (udev->desc->config_desc[7] & BIT(6)) >> 6;
 
     /* enable USB suspend */
     udev->pm.suspend_enabled = 1U;
@@ -118,14 +118,38 @@ void usbd_ep_recev(usb_dev *udev, uint8_t ep_addr, uint8_t *pbuf, uint16_t buf_l
 */
 void usbd_ep_send(usb_dev *udev, uint8_t ep_addr, uint8_t *pbuf, uint16_t buf_len)
 {
+    uint16_t len;
     uint8_t ep_num = EP_ID(ep_addr);
-
     usb_transc *transc = &udev->transc_in[ep_num];
 
-    uint16_t len = USB_MIN(buf_len, transc->max_len);
+    if(USBD_EP_DBL_BUF_GET(ep_num)) {
+        /* at the start of the transaction, fill in the RX buffer and TX buffer for the first time */
+        len = USB_MIN(buf_len, 2U * transc->max_len);
 
-    /* configure the transaction level parameters */
-    udev->drv_handler->ep_write(pbuf, ep_num, len);
+        /* write data from user FIFO to USB RAM */
+        udev->drv_handler->ep_dbl_write(pbuf, ep_num, len, 1U);
 
-    usb_transc_config(transc, pbuf + len, buf_len - len, len);
+        /* calculate the number of packets to be transmitted */
+        if(0U != buf_len) {
+            transc->xfer_packet_num = ((buf_len - 1U) + transc->max_len) / transc->max_len;
+        } else {
+            transc->xfer_packet_num = 1U;
+        }
+
+        if(2U == transc->xfer_packet_num) {
+            /* update transaction parameter, record the size of the last packet to transc->xfer_count */
+            usb_transc_config(transc, pbuf + len, buf_len - len, len - transc->max_len);
+        } else {
+            /* update transaction parameter */
+            usb_transc_config(transc, pbuf + len, buf_len - len, len);
+        }
+    } else {
+        len = USB_MIN(buf_len, transc->max_len);
+
+        /* write data from user FIFO to USB RAM */
+        udev->drv_handler->ep_write(pbuf, ep_num, len);
+
+        /* update transaction parameter */
+        usb_transc_config(transc, pbuf + len, buf_len - len, len);
+    }
 }

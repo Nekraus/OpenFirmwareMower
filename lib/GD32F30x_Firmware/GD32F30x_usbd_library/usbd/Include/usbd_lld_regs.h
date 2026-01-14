@@ -2,11 +2,11 @@
     \file    usbd_lld_regs.h
     \brief   USB device low level registers
 
-   \version 2024-12-20, V3.0.1, firmware for GD32F30x
+   \version 2025-7-31, V3.0.2, firmware for GD32F30x
 */
 
 /*
-    Copyright (c) 2024, GigaDevice Semiconductor Inc.
+    Copyright (c) 2025, GigaDevice Semiconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification, 
 are permitted provided that the following conditions are met:
@@ -124,7 +124,7 @@ OF SUCH DAMAGE.
                                         EPxCS_CTL | EPxCS_KCTL | EPxCS_TX_ST | EPxCS_AR)
 
 /* EPxCS_CTL[1:0] endpoint type control */
-#define ENDP_TYPE(regval)              (EPxCS_CTL & ((regval) << 9U))
+#define ENDP_TYPE(regval)              (EPxCS_CTL & ((regval) << 9))
 
 #define EP_BULK                        ENDP_TYPE(0U)    /*!< bulk transfers */
 #define EP_CONTROL                     ENDP_TYPE(1U)    /*!< control transfers */
@@ -136,7 +136,7 @@ OF SUCH DAMAGE.
 #define EPKCTL_MASK                    (~EPxCS_KCTL & EPCS_MASK)
 
 /* EPxCS_TX_STA[1:0] status for TX transfer */
-#define ENDP_TXSTAT(regval)            (EPxCS_TX_STA & ((regval) << 4U))
+#define ENDP_TXSTAT(regval)            (EPxCS_TX_STA & ((regval) << 4))
 
 #define EPTX_DISABLED                  ENDP_TXSTAT(0U)  /*!< transmission state is disabled */
 #define EPTX_STALL                     ENDP_TXSTAT(1U)  /*!< transmission state is STALL */
@@ -145,7 +145,7 @@ OF SUCH DAMAGE.
 #define EPTX_DTGMASK                   (EPxCS_TX_STA | EPCS_MASK)
 
 /* EPxCS_RX_STA[1:0] status for RX transfer */
-#define ENDP_RXSTAT(regval)            (EPxCS_RX_STA & ((regval) << 12U))
+#define ENDP_RXSTAT(regval)            (EPxCS_RX_STA & ((regval) << 12))
 
 #define EPRX_DISABLED                  ENDP_RXSTAT(0U)  /*!< reception state is disabled */
 #define EPRX_STALL                     ENDP_RXSTAT(1U)  /*!< reception state is STALL */
@@ -234,10 +234,15 @@ OF SUCH DAMAGE.
     } \
 } while(0)
 
+/* enable EPxCS_KCTL bit in the endpoint control and status register */
 #define USBD_EP_DBL_BUF_SET(ep) do { \
     uint16_t regval; \
     regval = (USBD_EPxCS(ep) | EPxCS_KCTL) & EPCS_MASK; \
     USBD_EPxCS(ep) = regval | EPxCS_RX_ST | EPxCS_TX_ST; \
 } while(0)
+
+/* get the double-buffer status of the specified endpoint */
+#define USBD_EP_DBL_BUF_GET(ep) ((((EP_BULK == (USBD_EPxCS(ep) & EPxCS_CTL)) && (USBD_EPxCS(ep) & EPxCS_KCTL)) || \
+                                  (EP_ISO == (USBD_EPxCS(ep) & EPxCS_CTL))) ? 1U : 0U)
 
 #endif /* USBD_LLD_REGS_H */

@@ -2,11 +2,11 @@
     \file    usbd_enum.h
     \brief   USB enumeration definitions
 
-   \version 2024-12-20, V3.0.1, firmware for GD32F30x
+   \version 2025-7-31, V3.0.2, firmware for GD32F30x
 */
 
 /*
-    Copyright (c) 2024, GigaDevice Semiconductor Inc.
+    Copyright (c) 2025, GigaDevice Semiconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification, 
 are permitted provided that the following conditions are met:
@@ -39,8 +39,8 @@ OF SUCH DAMAGE.
 
 /* request state enumeration */
 typedef enum _usb_reqsta {
-    REQ_SUPP     = 0x0U,                         /*!< supported request */
-    REQ_NOTSUPP  = 0x1U                          /*!< unsupported request */
+    REQ_SUPP                      = 0x0U,        /*!< supported request */
+    REQ_NOTSUPP                   = 0x1U         /*!< unsupported request */
 } usb_reqsta;
 
 /* string descriptor index enumeration */
@@ -80,14 +80,14 @@ typedef enum {
 //#define USB_SERIAL_STRING_SIZE    0x1AU
 
 /* USB device exported macros */
-#define BYTE_SWAP(addr)      (((uint16_t)(*((uint8_t *)(addr)))) + \
-                             (uint16_t)(((uint16_t)(*(((uint8_t *)(addr)) + 1U))) << 8U))
-#define BYTE_LOW(x)          ((uint8_t)((x) & 0x00FFU))
-#define BYTE_HIGH(x)         ((uint8_t)(((x) & 0xFF00U) >> 8U))
+#define BYTE_SWAP(addr)           (((uint16_t)(*((uint8_t *)(addr)))) + \
+                                   (uint16_t)(((uint16_t)(*(((uint8_t *)(addr)) + 1U))) << 8))
+#define BYTE_LOW(x)               ((uint8_t)((x) & 0x00FFU))
+#define BYTE_HIGH(x)              ((uint8_t)(((x) & 0xFF00U) >> 8))
 
-#define USB_MIN(a, b)        (((a) < (b)) ? (a) : (b))
+#define USB_MIN(a, b)             (((a) < (b)) ? (a) : (b))
 
-#define CTL_EP(ep)           ((0x00U == (ep)) || (0x80U == (ep)))
+#define CTL_EP(ep)                ((0x00U == (ep)) || (0x80U == (ep)))
 
 /* function declarations */
 /* handle USB standard device request */

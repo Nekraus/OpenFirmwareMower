@@ -17,7 +17,11 @@
       "searchDir": [],
       "runToEntryPoint": "main",
       "showDevDebugOutput": "none",
-      "preLaunchTask": "Build + Flash"
+      "preLaunchTask": "Build + Flash",
+      "liveWatch": {
+        "enabled": true,
+        "samplesPerSecond": 4
+      }
     },
     // {
     //   "name": "Build & Debug Microcontroller - ST-Link",

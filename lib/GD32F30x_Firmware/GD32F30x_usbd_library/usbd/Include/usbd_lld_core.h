@@ -2,11 +2,11 @@
     \file    usbd_lld_core.h
     \brief   USB device low level driver core 
 
-   \version 2024-12-20, V3.0.1, firmware for GD32F30x
+   \version 2025-7-31, V3.0.2, firmware for GD32F30x
 */
 
 /*
-    Copyright (c) 2024, GigaDevice Semiconductor Inc.
+    Copyright (c) 2025, GigaDevice Semiconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification, 
 are permitted provided that the following conditions are met:
@@ -53,8 +53,6 @@ typedef struct {
     __IO uint32_t rx_count;   /*!< reception count */
 } usbd_ep_ram;
 
-extern struct _usb_handler usbd_drv_handler;
-
 /* USB core driver structure */
 typedef struct {
     usb_basic  basic;         /*!< USB device basic parameters */
@@ -62,6 +60,36 @@ typedef struct {
 } usb_core_drv;
 
 extern usb_core_drv usbd_core;
+extern struct _usb_handler usbd_drv_handler;
+#if defined (__CC_ARM)         /* ARM Compiler */
+extern usbd_ep_ram btable_ep[EP_COUNT];
+#elif defined (__ICCARM__)     /* IAR Compiler */
+extern __no_init usbd_ep_ram btable_ep[EP_COUNT];
+#elif defined (__GNUC__)       /* GNU GCC Compiler  */
+extern usbd_ep_ram *btable_ep;
+#endif
+
+/* static inline function definitions */
+/*!
+    \brief      get the number of bytes received by the USB double-buffer endpoint
+    \param[in]  ep_num: endpoint number
+    \param[out] none
+    \retval     receive bytes number
+*/
+__STATIC_INLINE uint16_t usbd_ep_dbl_rx_count_get(uint8_t ep_num)
+{
+    uint16_t bytes = 0U;
+
+    if(USBD_EPxCS(ep_num) & EPxCS_RX_DTG) {
+        /* get the number of bytes received by the TX buffer */
+        bytes = (uint16_t)(btable_ep[ep_num].tx_count & EPRCNT_CNT);
+    } else {
+        /* get the number of bytes received by the RX buffer */
+        bytes = (uint16_t)(btable_ep[ep_num].rx_count & EPRCNT_CNT);
+    }
+
+    return bytes;
+}
 
 /* function declarations */
 /* free buffer used from application by toggling the SW_BUF byte */
