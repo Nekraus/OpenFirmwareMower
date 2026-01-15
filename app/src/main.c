@@ -105,7 +105,7 @@ void microros_thread(ULONG parameter)
   res = rclc_timer_init_default2(
       &timer,
       &support,
-      RCL_MS_TO_NS(1000),
+      RCL_MS_TO_NS(10),
       timer_callback,
       true);
 
