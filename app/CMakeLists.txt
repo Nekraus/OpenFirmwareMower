@@ -14,6 +14,7 @@ set(SOURCES
     src/debounce.c
     src/microros_transports.c
     src/microros_time.c
+    src/microros.c
 )
 
 add_executable(gd32_openfirmwaremower
