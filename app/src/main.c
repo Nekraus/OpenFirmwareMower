@@ -50,7 +50,7 @@ void tx_application_define(void *first_unused_memory)
   /* Create the main thread.  */
   tx_thread_create(&microros_thread, "microros_thread", MICROROS_App, 0,
                    pointer, AZURE_THREAD_STACK_SIZE,
-                   4, 4, TX_NO_TIME_SLICE, TX_AUTO_START);
+                   1, 1, TX_NO_TIME_SLICE, TX_AUTO_START);
 
   // tx_thread_create(&adc_thread, "ADC",
   //                  ADC_App, 0, pointer, 1024,
@@ -103,8 +103,8 @@ void tx_application_define(void *first_unused_memory)
   }
 
   tx_thread_create(&imu_thread, "IMU",
-                   IMU_App, 0, pointer, 1024,
-                   3, 3, TX_NO_TIME_SLICE, TX_AUTO_START);
+                   IMU_App, 1, pointer, 1024,
+                   4, 4, TX_NO_TIME_SLICE, TX_AUTO_START);
 }
 
 void thread_sleepUntil(uint32_t *const previousWakeTime, const uint32_t timeIncrement)

@@ -13,6 +13,7 @@ set(SOURCES
     src/adc.c
     src/debounce.c
     src/microros_transports.c
+    # src/microros_transports_dma.c
     src/microros_time.c
     src/microros.c
 )

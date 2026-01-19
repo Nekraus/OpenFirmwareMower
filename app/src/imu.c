@@ -24,12 +24,15 @@
 /* +-----------------------------------------------------------------------+ */
 #include "std_msgs/msg/int32.h"
 extern rcl_publisher_t imu_publisher;
+extern rcl_publisher_t test_publisher;
 
 extern bool microros_started;
+
 /* +-----------------------------------------------------------------------+ */
 /* |                         LOCAL VARIABLES                               | */
 /* +-----------------------------------------------------------------------+ */
-
+#define IMU_SAMPLE_PERIOD_TICKS (uint32_t)(0.005 * TX_TIMER_TICKS_PER_SECOND)
+uint32_t previous_imu_tick;
 float temp_f = 0.0;
 /* +-----------------------------------------------------------------------+ */
 /* |                         PUBLIC FUNCTIONS                              | */
@@ -42,13 +45,19 @@ void IMU_App(ULONG thread_input)
   // wait that microros communication is up and running
   while (!microros_started)
   {
-    tx_thread_sleep((ULONG)1 * TX_TIMER_TICKS_PER_SECOND);
+    tx_thread_sleep((ULONG)(1 * TX_TIMER_TICKS_PER_SECOND));
   }
 
   imu_data_t imu_data;
   static sensor_msgs__msg__Imu imu_msg = {};
+  static std_msgs__msg__Int32 msg = {0};
   imu_msg.header.frame_id.data = "imu";
   imu_msg.header.frame_id.size = 3;
+  previous_imu_tick = tx_time_get();
+  imu_msg.angular_velocity_covariance[0] = -1;
+  imu_msg.linear_acceleration_covariance[0] = -1;
+  imu_msg.orientation_covariance[0] = -1;
+  imu_msg.orientation.w = 1;
   while (1)
   {
     imu_read_data(&imu_data);
@@ -61,10 +70,7 @@ void IMU_App(ULONG thread_input)
     imu_msg.angular_velocity.x = imu_data.gx;
     imu_msg.angular_velocity.y = imu_data.gy;
     imu_msg.angular_velocity.z = imu_data.gz;
-    imu_msg.angular_velocity_covariance[0] = -1;
-    imu_msg.linear_acceleration_covariance[0] = -1;
-    imu_msg.orientation_covariance[0] = -1;
-    imu_msg.orientation.w = 1;
+    // rcl_publish(&test_publisher, &msg, NULL);
     rcl_publish(&imu_publisher, &imu_msg, NULL);
     // if (RMW_RET_OK == rcl_publish(&imu_publisher, &imu_msg, NULL))
     // {
@@ -74,7 +80,11 @@ void IMU_App(ULONG thread_input)
     // {
     //   printf("Failed to send\n");
     // }
-    tx_thread_sleep((ULONG)0.02 * TX_TIMER_TICKS_PER_SECOND);
+    // msg.data++;
+    // tx_thread_sleep(IMU_SAMPLE_PERIOD_TICKS);
+    // tx_thread_sleep(1);
+    thread_sleepUntil(&previous_imu_tick, IMU_SAMPLE_PERIOD_TICKS);
+    previous_imu_tick = tx_time_get();
   }
 }
 
@@ -122,10 +132,10 @@ void imu_init_component(void)
   imu_read(0x0f, 1, &tmp);
   imu_read(0xdd, 1, &tmp);
   /* sleep 50ms*/
-  tx_thread_sleep((ULONG)0.050 * TX_TIMER_TICKS_PER_SECOND);
+  tx_thread_sleep((ULONG)(0.050 * TX_TIMER_TICKS_PER_SECOND));
   imu_read(0xdd, 1, &tmp);
   /* sleep 50ms*/
-  tx_thread_sleep((ULONG)0.050 * TX_TIMER_TICKS_PER_SECOND);
+  tx_thread_sleep((ULONG)(0.050 * TX_TIMER_TICKS_PER_SECOND));
   imu_write(cmd[index], 1, &data[index]);
   index++;
   imu_write(cmd[index], 1, &data[index]);
@@ -133,7 +143,7 @@ void imu_init_component(void)
   imu_write(cmd[index], 1, &data[index]);
   index++;
   /* sleep 500ms*/
-  tx_thread_sleep((ULONG)0.5 * TX_TIMER_TICKS_PER_SECOND);
+  tx_thread_sleep((ULONG)(0.5 * TX_TIMER_TICKS_PER_SECOND));
   imu_write(cmd[index], 1, &data[index]);
   index++;
   imu_write(cmd[index], 1, &data[index]);
@@ -141,53 +151,53 @@ void imu_init_component(void)
   imu_write(cmd[index], 1, &data[index]);
   index++;
   /* sleep 100ms*/
-  tx_thread_sleep((ULONG)0.1 * TX_TIMER_TICKS_PER_SECOND);
+  tx_thread_sleep((ULONG)(0.1 * TX_TIMER_TICKS_PER_SECOND));
   imu_write(cmd[index], 1, &data[index]);
   index++;
   imu_write(cmd[index], 1, &data[index]);
   index++;
   /* sleep 1->10ms*/
-  tx_thread_sleep((ULONG)0.010 * TX_TIMER_TICKS_PER_SECOND);
+  tx_thread_sleep((ULONG)(0.010 * TX_TIMER_TICKS_PER_SECOND));
   imu_write(cmd[index], 1, &data[index]);
   index++;
   /* sleep 1->10ms*/
-  tx_thread_sleep((ULONG)0.010 * TX_TIMER_TICKS_PER_SECOND);
+  tx_thread_sleep((ULONG)(0.010 * TX_TIMER_TICKS_PER_SECOND));
   imu_write(cmd[index], 1, &data[index]);
   index++;
   /* sleep 50ms*/
-  tx_thread_sleep((ULONG)0.050 * TX_TIMER_TICKS_PER_SECOND);
+  tx_thread_sleep((ULONG)(0.050 * TX_TIMER_TICKS_PER_SECOND));
   imu_write(cmd[index], 1, &data[index]);
   index++;
   /* sleep 10ms*/
-  tx_thread_sleep((ULONG)0.010 * TX_TIMER_TICKS_PER_SECOND);
+  tx_thread_sleep((ULONG)(0.010 * TX_TIMER_TICKS_PER_SECOND));
   imu_write(cmd[index], 1, &data[index]);
   index++;
   /* sleep 1->10ms*/
-  tx_thread_sleep((ULONG)0.010 * TX_TIMER_TICKS_PER_SECOND);
+  tx_thread_sleep((ULONG)(0.010 * TX_TIMER_TICKS_PER_SECOND));
   imu_write(cmd[index], 1, &data[index]);
   index++;
   /* sleep 10ms*/
-  tx_thread_sleep((ULONG)0.010 * TX_TIMER_TICKS_PER_SECOND);
+  tx_thread_sleep((ULONG)(0.010 * TX_TIMER_TICKS_PER_SECOND));
   imu_write(cmd[index], 1, &data[index]);
   index++;
   /* sleep 10ms*/
-  tx_thread_sleep((ULONG)0.010 * TX_TIMER_TICKS_PER_SECOND);
+  tx_thread_sleep((ULONG)(0.010 * TX_TIMER_TICKS_PER_SECOND));
   imu_write(cmd[index], 1, &data[index]);
   index++;
   /* sleep 10ms*/
-  tx_thread_sleep((ULONG)0.010 * TX_TIMER_TICKS_PER_SECOND);
+  tx_thread_sleep((ULONG)(0.010 * TX_TIMER_TICKS_PER_SECOND));
   imu_write(cmd[index], 1, &data[index]);
   index++;
   /* sleep 10ms*/
-  tx_thread_sleep((ULONG)0.010 * TX_TIMER_TICKS_PER_SECOND);
+  tx_thread_sleep((ULONG)(0.010 * TX_TIMER_TICKS_PER_SECOND));
   imu_write(cmd[index], 1, &data[index]);
   index++;
   /* sleep 10ms*/
-  tx_thread_sleep((ULONG)0.010 * TX_TIMER_TICKS_PER_SECOND);
+  tx_thread_sleep((ULONG)(0.010 * TX_TIMER_TICKS_PER_SECOND));
   imu_write(cmd[index], 1, &data[index]);
   index++;
   /* sleep 10ms*/
-  tx_thread_sleep((ULONG)0.010 * TX_TIMER_TICKS_PER_SECOND);
+  tx_thread_sleep((ULONG)(0.010 * TX_TIMER_TICKS_PER_SECOND));
 
   imu_read(0x22, 1, &tmp);
   tmp = (tmp & 0xff) | 1;

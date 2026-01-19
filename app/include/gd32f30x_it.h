@@ -56,7 +56,7 @@ void DebugMon_Handler(void);
 void PendSV_Handler(void);
 /* this function handles USART interrupt request */
 // void USART0_IRQHandler(void);
-void DMA0_Channel3_IRQHandler(void);
-void DMA0_Channel4_IRQHandler(void);
+// void DMA0_Channel3_IRQHandler(void);
+// void DMA0_Channel4_IRQHandler(void);
 
 #endif /* GD32F30X_IT_H */

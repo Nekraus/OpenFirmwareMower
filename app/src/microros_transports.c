@@ -7,12 +7,12 @@
 // --- micro-ROS Transports ---
 #define UART_IT_BUFFER_SIZE 2048
 
-#define UART_TRANS_TIMEOUT (ULONG)0.100 * TX_TIMER_TICKS_PER_SECOND // in number of ticks
+#define UART_TRANS_TIMEOUT (ULONG)(0.100 * TX_TIMER_TICKS_PER_SECOND) // in number of ticks
 
 static uint8_t it_buffer[UART_IT_BUFFER_SIZE];
 static uint8_t it_data;
 static size_t it_head = 0, it_tail = 0;
-
+ULONG previous_ticks;
 /* GD32 USART peripheral definition */
 uint32_t gd32_usart = USART0;
 
@@ -32,7 +32,7 @@ bool usart_it_transport_open(struct uxrCustomTransport *transport)
   usart_interrupt_flag_clear(usart_periph, USART_INT_FLAG_RBNE);
   /* enable USART receive interrupt */
   usart_interrupt_enable(usart_periph, USART_INT_RBNE);
-
+  previous_ticks = tx_time_get();
   return true;
 }
 
@@ -54,7 +54,8 @@ bool usart_it_transport_close(struct uxrCustomTransport *transport)
 size_t usart_it_transport_write(struct uxrCustomTransport *transport, const uint8_t *buf, size_t len, uint8_t *err)
 {
   uint32_t usart_periph = gd32_usart;
-  uint32_t timeout = 0;
+  ULONG DT = tx_time_get() - previous_ticks;
+  previous_ticks = tx_time_get();
 
   if (transport->args != NULL)
   {
@@ -74,13 +75,9 @@ size_t usart_it_transport_write(struct uxrCustomTransport *transport, const uint
     usart_data_transmit(usart_periph, buf[written]);
   }
 
-  timeout = 0;
   /* wait transmit complete */
-  while (RESET == usart_flag_get(usart_periph, USART_FLAG_TC) && timeout < UART_TRANS_TIMEOUT)
-  {
-    timeout++;
-    tx_thread_sleep(1);
-  }
+  while (RESET == usart_flag_get(usart_periph, USART_FLAG_TC))
+    ;
 
   return written;
 }
@@ -208,7 +205,8 @@ void microros_usart_init(uint32_t usart_periph, uint32_t baudrate)
   case USART0:
     rcu_periph_clock_enable(RCU_USART0);
     usart_gpio_init(USART0);
-    nvic_irq_enable(USART0_IRQn, 2, 0);
+    nvic_irq_enable(USART0_IRQn,
+                    2, 0);
     break;
   case USART1:
     rcu_periph_clock_enable(RCU_USART1);

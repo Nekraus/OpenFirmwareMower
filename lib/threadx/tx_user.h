@@ -118,7 +118,7 @@
    version in tx_port.h or here.
    Note: the actual hardware timer value may need to be changed (usually in tx_initialize_low_level).  */
 
-#define TX_TIMER_TICKS_PER_SECOND (100UL)
+#define TX_TIMER_TICKS_PER_SECOND (1000UL)
 
 /* Determine if there is a FileX pointer in the thread control block.
    By default, the pointer is there for legacy/backwards compatibility.
