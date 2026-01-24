@@ -247,6 +247,10 @@ void BATTERY_App(ULONG thread_input)
     battery_u32StatusReceived = 0;
     printf("Bat Stat: %x%x %x%x\n", battery_pu8Status[3], battery_pu8Status[4], battery_pu8Status[1], battery_pu8Status[2]);
   }
+  else
+  {
+    // battery disconnected?
+  }
 
   /* Set global current in function charger state*/
   /* Charger logic */

@@ -3,7 +3,6 @@
 #include "tx_api.h"
 
 #define TX_TIMER_NANOSECOND_PER_TICK ((ULONG)(1000000000UL / TX_TIMER_TICKS_PER_SECOND))
-// #define TX_TIMER_NANOSECOND_PER_TICK ((ULONG)TX_TIMER_TICKS_PER_SECOND * 100000UL)
 
 int clock_gettime(clockid_t t, struct timespec *tspec)
 {

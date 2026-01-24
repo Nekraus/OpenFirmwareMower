@@ -6,24 +6,6 @@ bool microros_started = false;
 
 static char imu_topic[] = "/imu/data_raw";
 
-void timer_callback(rcl_timer_t *timer, int64_t last_call_time)
-{
-  (void)last_call_time;
-  (void)timer;
-
-  static std_msgs__msg__Int32 msg = {0};
-
-  if (RMW_RET_OK == rcl_publish(&test_publisher, &msg, NULL))
-  {
-    // printf("Sent: %ld\n", msg.data);
-    msg.data++;
-  }
-  else
-  {
-    // printf("Failed to send\n");
-  }
-}
-
 void MICROROS_App(ULONG parameter)
 {
 
@@ -36,13 +18,6 @@ void MICROROS_App(ULONG parameter)
 
   microros_usart_init(USART0, serial_comm_args.baud_rate);
 
-  // rmw_uros_set_custom_transport(
-  //     true,
-  //     (void *)USART0,
-  //     usart_dma_transport_open,
-  //     usart_dma_transport_close,
-  //     usart_dma_transport_write,
-  //     usart_dma_transport_read);
   rmw_uros_set_custom_transport(
       true,
       (void *)USART0,
@@ -78,13 +53,6 @@ void MICROROS_App(ULONG parameter)
       ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Imu),
       imu_topic);
 
-  // create publisher
-  res = rclc_publisher_init_best_effort(
-      &test_publisher,
-      &mower_node,
-      ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
-      "test_topic");
-
   // // create subscriber
   // rcl_subscription_t subscriber;
   // res = rclc_subscription_init_default(
@@ -117,8 +85,8 @@ void MICROROS_App(ULONG parameter)
     while (1)
     {
       // rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
-      // tx_thread_sleep((ULONG)0.1 * TX_TIMER_TICKS_PER_SECOND);
-      tx_thread_sleep(1);
+      tx_thread_sleep((ULONG)(0.1 * TX_TIMER_TICKS_PER_SECOND));
+      // tx_thread_sleep(1);
     }
   }
   // Free resources.

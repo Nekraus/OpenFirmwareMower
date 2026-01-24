@@ -3,6 +3,8 @@
  *
  *  Created on: 18/12/2024
  *      Author: Bruno Lecornu
+ *  Changelog:
+ *   - 2026-01-19: Christian-Nils, added micro-ros messages
  */
 
 /* +-----------------------------------------------------------------------+ */
@@ -22,16 +24,14 @@
 /* +-----------------------------------------------------------------------+ */
 /* |                         GLOBAL VARIABLES                              | */
 /* +-----------------------------------------------------------------------+ */
-#include "std_msgs/msg/int32.h"
 extern rcl_publisher_t imu_publisher;
-extern rcl_publisher_t test_publisher;
-
 extern bool microros_started;
 
 /* +-----------------------------------------------------------------------+ */
 /* |                         LOCAL VARIABLES                               | */
 /* +-----------------------------------------------------------------------+ */
-#define IMU_SAMPLE_PERIOD_TICKS (uint32_t)(0.005 * TX_TIMER_TICKS_PER_SECOND)
+#define IMU_SAMPLING_RATE 50UL
+#define IMU_SAMPLE_PERIOD_TICKS (uint32_t)(TX_TIMER_TICKS_PER_SECOND / IMU_SAMPLING_RATE)
 uint32_t previous_imu_tick;
 float temp_f = 0.0;
 /* +-----------------------------------------------------------------------+ */
@@ -50,7 +50,7 @@ void IMU_App(ULONG thread_input)
 
   imu_data_t imu_data;
   static sensor_msgs__msg__Imu imu_msg = {};
-  static std_msgs__msg__Int32 msg = {0};
+
   imu_msg.header.frame_id.data = "imu";
   imu_msg.header.frame_id.size = 3;
   previous_imu_tick = tx_time_get();
@@ -70,19 +70,8 @@ void IMU_App(ULONG thread_input)
     imu_msg.angular_velocity.x = imu_data.gx;
     imu_msg.angular_velocity.y = imu_data.gy;
     imu_msg.angular_velocity.z = imu_data.gz;
-    // rcl_publish(&test_publisher, &msg, NULL);
+
     rcl_publish(&imu_publisher, &imu_msg, NULL);
-    // if (RMW_RET_OK == rcl_publish(&imu_publisher, &imu_msg, NULL))
-    // {
-    //   printf("Data sent!\n");
-    // }
-    // else
-    // {
-    //   printf("Failed to send\n");
-    // }
-    // msg.data++;
-    // tx_thread_sleep(IMU_SAMPLE_PERIOD_TICKS);
-    // tx_thread_sleep(1);
     thread_sleepUntil(&previous_imu_tick, IMU_SAMPLE_PERIOD_TICKS);
     previous_imu_tick = tx_time_get();
   }
@@ -156,12 +145,12 @@ void imu_init_component(void)
   index++;
   imu_write(cmd[index], 1, &data[index]);
   index++;
-  /* sleep 1->10ms*/
-  tx_thread_sleep((ULONG)(0.010 * TX_TIMER_TICKS_PER_SECOND));
+  /* sleep 1ms*/
+  tx_thread_sleep((ULONG)(0.001 * TX_TIMER_TICKS_PER_SECOND));
   imu_write(cmd[index], 1, &data[index]);
   index++;
-  /* sleep 1->10ms*/
-  tx_thread_sleep((ULONG)(0.010 * TX_TIMER_TICKS_PER_SECOND));
+  /* sleep 1ms*/
+  tx_thread_sleep((ULONG)(0.001 * TX_TIMER_TICKS_PER_SECOND));
   imu_write(cmd[index], 1, &data[index]);
   index++;
   /* sleep 50ms*/
@@ -172,8 +161,8 @@ void imu_init_component(void)
   tx_thread_sleep((ULONG)(0.010 * TX_TIMER_TICKS_PER_SECOND));
   imu_write(cmd[index], 1, &data[index]);
   index++;
-  /* sleep 1->10ms*/
-  tx_thread_sleep((ULONG)(0.010 * TX_TIMER_TICKS_PER_SECOND));
+  /* sleep 1ms*/
+  tx_thread_sleep((ULONG)(0.001 * TX_TIMER_TICKS_PER_SECOND));
   imu_write(cmd[index], 1, &data[index]);
   index++;
   /* sleep 10ms*/

@@ -10,7 +10,7 @@
 #include "../include/microros.h"
 
 #define BYTE_POOL_SIZE 9120
-#define AZURE_THREAD_STACK_SIZE 5000
+#define AZURE_THREAD_STACK_SIZE 3000
 #define AZURE_THREAD_PRIORITY 4
 
 TX_THREAD adc_thread;
@@ -36,6 +36,10 @@ ULONG azure_thread_stack[AZURE_THREAD_STACK_SIZE / sizeof(ULONG)];
 void tx_application_define(void *first_unused_memory)
 {
 
+  BATTERY_init();
+  // MOTORS_Init();
+  // DISPLAY_Init();
+
   CHAR *pointer = TX_NULL;
 
   /* Create a byte memory pool from which to allocate the thread stacks.  */
@@ -47,24 +51,29 @@ void tx_application_define(void *first_unused_memory)
   /* Allocate the stack for thread 0.  */
   tx_byte_allocate(&byte_pool, (VOID **)&pointer, AZURE_THREAD_STACK_SIZE, TX_NO_WAIT);
 
-  /* Create the main thread.  */
-  tx_thread_create(&microros_thread, "microros_thread", MICROROS_App, 0,
-                   pointer, AZURE_THREAD_STACK_SIZE,
-                   1, 1, TX_NO_TIME_SLICE, TX_AUTO_START);
+  // /* Create the main thread.  */
+  // tx_thread_create(&microros_thread, "microros_thread", MICROROS_App, 0,
+  //                  pointer, AZURE_THREAD_STACK_SIZE,
+  //                  1, 1, TX_NO_TIME_SLICE, TX_AUTO_START);
 
-  // tx_thread_create(&adc_thread, "ADC",
-  //                  ADC_App, 0, pointer, 1024,
-  //                  3, 3, TX_NO_TIME_SLICE, TX_AUTO_START);
+  if (tx_byte_allocate(&byte_pool, (VOID **)&pointer,
+                       1024, TX_NO_WAIT) != TX_SUCCESS)
+  {
+    // return TX_POOL_ERROR;
+  }
+  tx_thread_create(&adc_thread, "ADC",
+                   ADC_App, 0, pointer, 1024,
+                   3, 3, TX_NO_TIME_SLICE, TX_AUTO_START);
 
-  // if (tx_byte_allocate(&byte_pool, (VOID **)&pointer,
-  //                      1024, TX_NO_WAIT) != TX_SUCCESS)
-  // {
-  //   // return TX_POOL_ERROR;
-  // }
+  if (tx_byte_allocate(&byte_pool, (VOID **)&pointer,
+                       1024, TX_NO_WAIT) != TX_SUCCESS)
+  {
+    // return TX_POOL_ERROR;
+  }
 
-  // tx_thread_create(&io_thread, "IO",
-  //                  DIGITALIO_App, 0, pointer, 1024,
-  //                  10, 10, TX_NO_TIME_SLICE, TX_AUTO_START);
+  tx_thread_create(&io_thread, "IO",
+                   DIGITALIO_App, 0, pointer, 1024,
+                   10, 10, TX_NO_TIME_SLICE, TX_AUTO_START);
 
   // if (tx_byte_allocate(&byte_pool, (VOID **)&pointer,
   //                      1024, TX_NO_WAIT) != TX_SUCCESS)
@@ -86,15 +95,15 @@ void tx_application_define(void *first_unused_memory)
   //                  MOTORS_App, 0, pointer, 1024,
   //                  3, 3, TX_NO_TIME_SLICE, TX_AUTO_START);
 
-  // if (tx_byte_allocate(&byte_pool, (VOID **)&pointer,
-  //                      1024, TX_NO_WAIT) != TX_SUCCESS)
-  // {
-  //   // return TX_POOL_ERROR;
-  // }
+  if (tx_byte_allocate(&byte_pool, (VOID **)&pointer,
+                       1024, TX_NO_WAIT) != TX_SUCCESS)
+  {
+    // return TX_POOL_ERROR;
+  }
 
-  // tx_thread_create(&battery_thread, "BATTERY",
-  //                  BATTERY_App, 0, pointer, 1024,
-  //                  3, 3, TX_NO_TIME_SLICE, TX_AUTO_START);
+  tx_thread_create(&battery_thread, "BATTERY",
+                   BATTERY_App, 0, pointer, 1024,
+                   3, 3, TX_NO_TIME_SLICE, TX_AUTO_START);
 
   if (tx_byte_allocate(&byte_pool, (VOID **)&pointer,
                        1024, TX_NO_WAIT) != TX_SUCCESS)
@@ -118,10 +127,6 @@ void thread_sleepUntil(uint32_t *const previousWakeTime, const uint32_t timeIncr
 
 int main(void)
 {
-
-  // // init controllable LED
-  // rcu_periph_clock_enable(RCU_GPIOF);
-  // gpio_init(GPIOF, GPIO_MODE_OUT_PP, GPIO_OSPEED_10MHZ, GPIO_PIN_11);
 
   systick_interval_set(TX_TIMER_TICKS_PER_SECOND);
 

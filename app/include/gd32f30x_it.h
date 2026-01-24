@@ -2,11 +2,14 @@
     \file    gd32f30x_it.h
     \brief   the header file of the ISR
 
-   \version 2025-7-31, V3.0.2, firmware for GD32F30x
+    \version 2017-02-10, V1.0.0, firmware for GD32F30x
+    \version 2018-10-10, V1.1.0, firmware for GD32F30x
+    \version 2018-12-25, V2.0.0, firmware for GD32F30x
+    \version 2020-09-30, V2.1.0, firmware for GD32F30x
 */
 
 /*
-    Copyright (c) 2025, GigaDevice Semiconductor Inc.
+    Copyright (c) 2020, GigaDevice Semiconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -38,25 +41,31 @@ OF SUCH DAMAGE.
 #include "gd32f30x.h"
 
 /* function declarations */
-/* this function handles NMI exception */
-void NMI_Handler(void);
-/* this function handles HardFault exception */
-void HardFault_Handler(void);
+// /* this function handles NMI exception */
+// void NMI_Handler(void);
+// /* this function handles HardFault exception */
+// void HardFault_Handler(void);
 /* this function handles MemManage exception */
 void MemManage_Handler(void);
 /* this function handles BusFault exception */
-void BusFault_Handler(void);
-/* this function handles UsageFault exception */
-void UsageFault_Handler(void);
-/* this function handles SVC exception */
-void SVC_Handler(void);
-/* this function handles DebugMon exception */
-void DebugMon_Handler(void);
-/* this function handles PendSV exception */
-void PendSV_Handler(void);
-/* this function handles USART interrupt request */
-// void USART0_IRQHandler(void);
-// void DMA0_Channel3_IRQHandler(void);
-// void DMA0_Channel4_IRQHandler(void);
+// void BusFault_Handler(void);
+// /* this function handles UsageFault exception */
+// void UsageFault_Handler(void);
+// /* this function handles SVC exception */
+// void SVC_Handler(void);
+// /* this function handles DebugMon exception */
+// void DebugMon_Handler(void);
+// /* this function handles PendSV exception */
+// void PendSV_Handler(void);
+// /* this function handles SysTick exception */
+// void SysTick_Handler(void);
+// /* this function handles ADC0_1 exception */
+void ADC0_1_IRQHandler(void);
+/* this function handles external lines 5 to 9 interrupt request */
+void EXTI5_9_IRQHandler(void);
+/* this function handles TIMER2 interrupt request */
+void TIMER2_IRQHandler(void);
+
+void DMA0_Channel5_IRQHandler(void);
 
 #endif /* GD32F30X_IT_H */
