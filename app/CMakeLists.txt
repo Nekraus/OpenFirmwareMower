@@ -12,6 +12,10 @@ set(SOURCES
     src/newlib_nano.c
     src/adc.c
     src/debounce.c
+    src/microros_transports.c
+    # src/microros_transports_dma.c
+    src/microros_time.c
+    src/microros.c
 )
 
 add_executable(gd32_openfirmwaremower
@@ -22,13 +26,16 @@ add_executable(gd32_openfirmwaremower
 target_link_libraries(gd32_openfirmwaremower
     azrtos::threadx
     gd32f30x
+    libmicroros-prebuilt
 )
 
 target_include_directories(gd32_openfirmwaremower
     PUBLIC
-        include/
+    include/
+    ../ros/microros/include
 )
 
+# set_target_linker(gd32_openfirmwaremower  ${CMAKE_CURRENT_SOURCE_DIR}/startup/GD32F303RC.ld)
 set_target_linker(gd32_openfirmwaremower  ${CMAKE_CURRENT_SOURCE_DIR}/startup/GD32F303ZE.ld)
 
 post_build(gd32_openfirmwaremower)

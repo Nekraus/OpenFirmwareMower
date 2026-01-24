@@ -13,8 +13,14 @@
 
 #include "tx_api.h"
 
+#include <rcl/rcl.h>
+
 #include "gd32f30x.h"
 #include "gd32f30x_it.h"
+#include "cmsis_utils.h"
+
+#include <errno.h>
+#include <sys/unistd.h>
 
 /* +-----------------------------------------------------------------------+ */
 /* |                        CONSTANTES / MACROS                            | */
@@ -32,6 +38,6 @@
 /* |                         PUBLIC FUNCTIONS                              | */
 /* +-----------------------------------------------------------------------+ */
 
-void thread_sleepUntil(uint32_t * const previousWakeTime, const uint32_t timeIncrement);
+void thread_sleepUntil(uint32_t *const previousWakeTime, const uint32_t timeIncrement);
 
 #endif /* MAIN_H_ */

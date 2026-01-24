@@ -2,11 +2,11 @@
     \file    cdc_acm_core.c
     \brief   CDC ACM driver
 
-   \version 2024-12-20, V3.0.1, firmware for GD32F30x
+   \version 2025-7-31, V3.0.2, firmware for GD32F30x
 */
 
 /*
-    Copyright (c) 2024, GigaDevice Semiconductor Inc.
+    Copyright (c) 2025, GigaDevice Semiconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification, 
 are permitted provided that the following conditions are met:
@@ -333,9 +333,15 @@ static uint8_t cdc_acm_init(usb_dev *udev, uint8_t config_index)
 {
     static usb_cdc_handler cdc_handler;
 
+#ifndef USBD_DOUBLE_BUFFER_ENABLE
     /* initialize the data endpoints */
     usbd_ep_init(udev, EP_BUF_SNG, BULK_TX_ADDR, &(cdc_config_desc.cdc_in_endpoint));
     usbd_ep_init(udev, EP_BUF_SNG, BULK_RX_ADDR, &(cdc_config_desc.cdc_out_endpoint));
+#else
+    /* initialize the data endpoints */
+    usbd_ep_init(udev, EP_BUF_DBL, BULK_TX_ADDR, &(cdc_config_desc.cdc_in_endpoint));
+    usbd_ep_init(udev, EP_BUF_DBL, BULK_RX_ADDR, &(cdc_config_desc.cdc_out_endpoint));
+#endif /* !USBD_DOUBLE_BUFFER_ENABLE */
 
     /* initialize the command endpoint */
     usbd_ep_init(udev, EP_BUF_SNG, INT_TX_ADDR, &(cdc_config_desc.cdc_cmd_endpoint));

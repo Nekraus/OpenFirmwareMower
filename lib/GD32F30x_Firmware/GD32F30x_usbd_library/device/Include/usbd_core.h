@@ -2,11 +2,11 @@
     \file    usbd_core.h
     \brief   USB device driver core 
 
-   \version 2024-12-20, V3.0.1, firmware for GD32F30x
+   \version 2025-7-31, V3.0.2, firmware for GD32F30x
 */
 
 /*
-    Copyright (c) 2024, GigaDevice Semiconductor Inc.
+    Copyright (c) 2025, GigaDevice Semiconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification, 
 are permitted provided that the following conditions are met:
@@ -96,6 +96,7 @@ typedef struct {
     uint8_t   *xfer_buf;          /*!< transfer buffer */
     uint16_t  xfer_len;           /*!< transfer length */
     uint16_t  xfer_count;         /*!< transfer count */
+    uint16_t  xfer_packet_num;    /*!< transfer packets number */
 } usb_transc;
 
 /* USB device basic structure */
@@ -210,6 +211,7 @@ struct _usb_handler {
     void (*ep_disable)       (usb_dev *udev, uint8_t ep_addr);
     void (*ep_rx_enable)     (usb_dev *udev, uint8_t ep_num);
     void (*ep_write)         (uint8_t *fifo, uint8_t ep_num, uint16_t bytes);
+    void (*ep_dbl_write)     (uint8_t *fifo, uint8_t ep_num, uint16_t bytes, uint8_t initial_xfer);
     uint16_t (*ep_read)      (uint8_t *fifo, uint8_t ep_num, uint8_t buf_kind);
     void (*ep_stall_set)     (usb_dev *udev, uint8_t ep_addr);
     void (*ep_stall_clear)   (usb_dev *udev, uint8_t ep_addr);

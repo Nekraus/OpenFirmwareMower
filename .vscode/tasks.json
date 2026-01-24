@@ -1,0 +1,48 @@
+{
+  "tasks": [
+    {
+      "type": "shell",
+      "label": "ST-LINKv2 flash",
+      "command": "openocd",
+      "args": [
+        "-f",
+        "interface/stlink-v2.cfg",
+        "-f",
+        "target/stm32f3x.cfg",
+        "-c",
+        "init",
+        "-c",
+        "reset halt",
+        "-c",
+        "flash write_image erase build/app/gd32_openfirmwaremower.bin 0x08000000",
+        "-c",
+        "reset",
+        "-c",
+        "exit"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Build + Flash",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "CMake: clean rebuild",
+        "ST-LINKv2 flash",
+      ]
+    },
+    {
+      "type": "cmake",
+      "label": "CMake: clean rebuild",
+      "command": "cleanRebuild",
+      "targets": [
+        "all"
+      ],
+      "group": "build",
+      "problemMatcher": [],
+      "detail": "CMake template clean rebuild task"
+    },
+  ]
+}

@@ -2,11 +2,11 @@
     \file    usbd_lld_core.c
     \brief   USB device low level driver core
 
-   \version 2024-12-20, V3.0.1, firmware for GD32F30x
+   \version 2025-7-31, V3.0.2, firmware for GD32F30x
 */
 
 /*
-    Copyright (c) 2024, GigaDevice Semiconductor Inc.
+    Copyright (c) 2025, GigaDevice Semiconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification, 
 are permitted provided that the following conditions are met:
@@ -39,7 +39,7 @@ OF SUCH DAMAGE.
 #define USB_EPTYPE_MASK           0x03U
 
 #if defined (__CC_ARM)         /* ARM Compiler */
-static usbd_ep_ram btable_ep[EP_COUNT]__attribute__((at(USBD_RAM + 2U * (BTABLE_OFFSET & 0xFFF8U))));
+usbd_ep_ram btable_ep[EP_COUNT]__attribute__((at(USBD_RAM + 2U * (BTABLE_OFFSET & 0xFFF8U))));
 #elif defined (__ICCARM__)     /* IAR Compiler */
 __no_init usbd_ep_ram btable_ep[EP_COUNT] @(USBD_RAM + 2U * (BTABLE_OFFSET & 0xFFF8U));
 #elif defined (__GNUC__)       /* GNU GCC Compiler  */
@@ -67,6 +67,7 @@ static void usbd_ep_disable(usb_dev *udev, uint8_t ep_addr);
 static void usbd_ep_stall_set(usb_dev *udev, uint8_t ep_addr);
 static void usbd_ep_stall_clear(usb_dev *udev, uint8_t ep_addr);
 static void usbd_ep_data_write(uint8_t *user_fifo, uint8_t ep_num, uint16_t bytes);
+static void usbd_ep_dbl_data_write(uint8_t *user_fifo, uint8_t ep_num, uint16_t bytes, uint8_t initial_xfer);
 static uint16_t usbd_ep_data_read(uint8_t *user_fifo, uint8_t ep_num, uint8_t buf_kind);
 static void usbd_resume(usb_dev *udev);
 static void usbd_suspend(void);
@@ -86,6 +87,7 @@ struct _usb_handler usbd_drv_handler = {
     .ep_setup       = usbd_ep_setup,
     .ep_rx_enable   = usbd_ep_rx_enable,
     .ep_write       = usbd_ep_data_write,
+    .ep_dbl_write   = usbd_ep_dbl_data_write,
     .ep_read        = usbd_ep_data_read,
     .ep_stall_set   = usbd_ep_stall_set,
     .ep_stall_clear = usbd_ep_stall_clear,
@@ -217,7 +219,7 @@ static void usbd_ep_reset(usb_dev *udev)
             btable_ep[0].rx_count = ((((uint16_t)transc->max_len >> 5) - 1U) << 10) | 0x8000U; 
         }
     } else {
-        btable_ep[0].rx_count = ((transc->max_len + 1U) & ~1U) << 9U;
+        btable_ep[0].rx_count = ((transc->max_len + 1U) & ~1U) << 9;
     }
 
     /* reset non-control endpoints */
@@ -269,10 +271,21 @@ static void usbd_ep_setup(usb_dev *udev, uint8_t buf_kind, uint32_t buf_addr, co
         } else if((uint8_t)EP_BUF_DBL == buf_kind) {
             USBD_EP_DBL_BUF_SET(ep_num);
 
+            /* clear TX_DTG, set RX_DTG */
+            USBD_TX_DTG_CLEAR(ep_num);
+            USBD_RX_DTG_CLEAR(ep_num);
+            USBD_RX_DTG_TOGGLE(ep_num);
+
             btable_ep[ep_num].tx_addr = buf_addr & 0xFFFFU;
             btable_ep[ep_num].rx_addr = (buf_addr & 0xFFFF0000U) >> 16U;
 
-            USBD_EP_TX_STAT_SET(ep_num, EPTX_VALID);
+            if(EP_ISO != (USBD_EPxCS(ep_num) & EPxCS_CTL)) {
+                /* configure the endpoint status as NAK status */
+                USBD_EP_TX_STAT_SET(ep_num, EPTX_NAK);
+            } else {
+                /* configure the endpoint status as DISABLED status */
+                USBD_EP_TX_STAT_SET(ep_num, EPTX_DISABLED);
+            }
             USBD_EP_RX_STAT_SET(ep_num, EPRX_DISABLED);
         } else {
             /* error operation */
@@ -287,15 +300,18 @@ static void usbd_ep_setup(usb_dev *udev, uint8_t buf_kind, uint32_t buf_addr, co
         } else if((uint8_t)EP_BUF_DBL == buf_kind) {
             USBD_EP_DBL_BUF_SET(ep_num);
 
+            /* clear RX_DTG, set TX_DTG */
+            USBD_RX_DTG_CLEAR(ep_num);
+            USBD_TX_DTG_CLEAR(ep_num);
             USBD_TX_DTG_TOGGLE(ep_num);
 
             btable_ep[ep_num].tx_addr = buf_addr & 0xFFFFU;
-            btable_ep[ep_num].rx_addr = (buf_addr & 0xFFFF0000U) >> 16U;
+            btable_ep[ep_num].rx_addr = (buf_addr & 0xFFFF0000U) >> 16;
 
             if(max_len > 62U) {
                 btable_ep[ep_num].tx_count = (((uint32_t)max_len << 5) - 1U) | 0x8000U;
             } else {
-                btable_ep[ep_num].tx_count = ((max_len + 1U) & ~1U) << 9U;
+                btable_ep[ep_num].tx_count = ((max_len + 1U) & ~1U) << 9;
             }
         } else {
             /* error operation */
@@ -308,15 +324,19 @@ static void usbd_ep_setup(usb_dev *udev, uint8_t buf_kind, uint32_t buf_addr, co
                 btable_ep[ep_num].rx_count = ((((uint16_t)transc->max_len >> 5) - 1U) << 10) | 0x8000U; 
             }
         } else {
-            btable_ep[ep_num].rx_count = ((max_len + 1U) & ~1U) << 9U;
+            btable_ep[ep_num].rx_count = ((max_len + 1U) & ~1U) << 9;
         }
 
         if((uint8_t)EP_BUF_SNG == buf_kind) {
             /* configure the endpoint status as NAK status */
             USBD_EP_RX_STAT_SET(ep_num, EPRX_NAK);
         } else if((uint8_t)EP_BUF_DBL == buf_kind) {
-            USBD_EP_RX_STAT_SET(ep_num, EPRX_DISABLED);
-            USBD_EP_TX_STAT_SET(ep_num, EPTX_NAK);
+            if(EP_ISO != (USBD_EPxCS(ep_num) & EPxCS_CTL)) {
+                USBD_EP_RX_STAT_SET(ep_num, EPRX_NAK);
+            } else {
+                USBD_EP_RX_STAT_SET(ep_num, EPRX_DISABLED);
+            }
+            USBD_EP_TX_STAT_SET(ep_num, EPTX_DISABLED);
         } else {
             /* error operation */
         }
@@ -486,7 +506,133 @@ static void usbd_ep_data_write(uint8_t *user_fifo, uint8_t ep_num, uint16_t byte
 }
 
 /*!
-    \brief      read data from USBRAM to user FIFO
+    \brief      write data from user FIFO to USB RAM in double-buffer endpoint
+    \param[in]  user_fifo: pointer to user FIFO
+    \param[in]  ep_num: endpoint number
+    \param[in]  bytes: the bytes count of the write data
+    \param[in]  initial_xfer: flag indicating initial data transfer phase in IN transaction
+    \param[out] none
+    \retval     none
+*/
+static void usbd_ep_dbl_data_write(uint8_t *user_fifo, uint8_t ep_num, uint16_t bytes, uint8_t initial_xfer)
+{
+    usb_dev *udev = usbd_core.dev;
+    uint32_t epcs = USBD_EPxCS(ep_num);
+    usb_transc *transc = &udev->transc_in[ep_num];
+    uint32_t n, *write_addr, *write_addr0, *write_addr1;
+
+    if(USBD_EP_DBL_BUF_GET(ep_num)) {
+        /* initialize double-buffer by pre-filling both RAM blocks during initial transfer phase */
+        if(1U == initial_xfer) {
+            /* more than one packet of data is to be transmitted, fill in the RX buffer and TX buffer for the first time */
+            if(bytes > transc->max_len) {
+                /* write data to TX buffer */
+                write_addr0 = (uint32_t *)(btable_ep[ep_num].tx_addr * 2U + USBD_RAM);
+
+                /* write data to RX buffer */
+                write_addr1 = (uint32_t *)(btable_ep[ep_num].rx_addr * 2U + USBD_RAM);
+
+                /* If TX_DTG=1 (RX_DTG=0), it indicates that the current USB peripheral is accessing the RX buffer, \
+                   hence the user data needs to be filled into the RX buffer first, awaiting transmission. Subsequently, \
+                   the following user data should be filled to the TX buffer, waiting for the second packet to be sent.*/
+                if(epcs & EPxCS_TX_DTG) {
+                    for(n = 0U; n < (transc->max_len + 1U) / 2U; n++) {
+                        *write_addr1++ = *((uint16_t *)user_fifo);
+                        user_fifo += 2U;
+                    }
+
+                    for(n = 0U; n < (bytes - transc->max_len + 1U) / 2U; n++) {
+                        *write_addr0++ = *((uint16_t *)user_fifo);
+                        user_fifo += 2U;
+                    }
+
+                    btable_ep[ep_num].rx_count = transc->max_len;
+                    btable_ep[ep_num].tx_count = bytes - transc->max_len;
+
+                /* If TX_DTG=0 (RX_DTG=1), it indicates that the current USB peripheral is accessing the TX buffer, \
+                   hence the user data needs to be filled into the TX buffer first, awaiting transmission. Subsequently, \
+                   the following user data should be filled to the RX buffer, waiting for the second packet to be sent.*/
+                } else {
+                    for(n = 0U; n < (transc->max_len + 1U) / 2U; n++) {
+                        *write_addr0++ = *((uint16_t *)user_fifo);
+                        user_fifo += 2U;
+                    }
+
+                    for(n = 0U; n < (bytes - transc->max_len + 1U) / 2U; n++) {
+                        *write_addr1++ = *((uint16_t *)user_fifo);
+                        user_fifo += 2U;
+                    }
+
+                    btable_ep[ep_num].tx_count = transc->max_len;
+                    btable_ep[ep_num].rx_count = bytes - transc->max_len;
+                }
+
+            /* When there is only one packet of data to be transmitted, only need to fill the user data to one \
+               of the RX buffer or the TX buffer. */
+            } else {
+                /* If TX_DTG=1 (RX_DTG=0), it indicates that the current USB peripheral is accessing the RX buffer, \
+                   hence the user data needs to be filled into the RX buffer first, awaiting transmission. */
+                if(epcs & EPxCS_TX_DTG) {
+                    /* write data to RX buffer */
+                    write_addr = (uint32_t *)(btable_ep[ep_num].rx_addr * 2U + USBD_RAM);
+
+                /* If TX_DTG=0 (RX_DTG=1), it indicates that the current USB peripheral is accessing the TX buffer, \
+                   hence the user data needs to be filled into the TX buffer first, awaiting transmission. */
+                } else {
+                    /* write data to TX buffer */
+                    write_addr = (uint32_t *)(btable_ep[ep_num].tx_addr * 2U + USBD_RAM);
+                }
+
+                if(0U != bytes) {
+                    for(n = 0U; n < (bytes + 1U) / 2U; n++) {
+                        *write_addr++ = *((uint16_t *)user_fifo);
+                        user_fifo += 2U;
+                    }
+                }
+
+                if(epcs & EPxCS_TX_DTG) {
+                    btable_ep[ep_num].rx_count = bytes;
+                } else {
+                    btable_ep[ep_num].tx_count = bytes;
+                }
+            }
+
+         /* IN transaction processing, fill user data to USB RAM */
+        } else {
+            /* Because it is in the IN transfer process, if TX_DTG=1 (RX_DTG=0), it indicates that the RX buffer  \
+               is being accessed by the USB peripheral, at this time the TX buffer can be accessed by the user.   \
+               On the contrary, the TX buffer is being accessed by the USB peripheral, at this time the RX buffer \
+               can be accessed by the user. */
+            if(epcs & EPxCS_TX_DTG) {
+                /* write data to RX buffer */
+                write_addr = (uint32_t *)(btable_ep[ep_num].tx_addr * 2U + USBD_RAM);
+            } else {
+                /* write data to TX buffer */
+                write_addr = (uint32_t *)(btable_ep[ep_num].rx_addr * 2U + USBD_RAM);
+            }
+
+            if(0U != bytes) {
+                for(n = 0U; n < (bytes + 1U) / 2U; n++) {
+                    *write_addr++ = *((uint16_t *)user_fifo);
+                    user_fifo += 2U;
+                }
+            }
+
+            if(epcs & EPxCS_TX_DTG) {
+                btable_ep[ep_num].tx_count = bytes;
+            } else {
+                btable_ep[ep_num].rx_count = bytes;
+            }
+        }
+
+        USBD_EP_TX_STAT_SET(ep_num, EPTX_VALID);
+    } else {
+        /* error operation */
+    }
+}
+
+/*!
+    \brief      read data from USB RAM to user FIFO
     \param[in]  user_fifo: pointer to user FIFO
     \param[in]  ep_num: endpoint number
     \param[in]  buf_kind: endpoint buffer kind
@@ -503,7 +649,7 @@ static uint16_t usbd_ep_data_read(uint8_t *user_fifo, uint8_t ep_num, uint8_t bu
 
         read_addr = (uint32_t *)(btable_ep[ep_num].rx_addr * 2U + USBD_RAM);
     } else if((uint8_t)EP_BUF_DBL == buf_kind) {
-        if(USBD_EPxCS(ep_num) & EPxCS_TX_DTG) {
+        if(USBD_EPxCS(ep_num) & EPxCS_RX_DTG) {
             bytes = (uint16_t)(btable_ep[ep_num].tx_count & EPRCNT_CNT);
 
             read_addr = (uint32_t *)(btable_ep[ep_num].tx_addr * 2U + USBD_RAM);

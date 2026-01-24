@@ -2,11 +2,11 @@
     \file    usbd_lld_int.c
     \brief   USB device low level interrupt routines
 
-   \version 2024-12-20, V3.0.1, firmware for GD32F30x
+   \version 2025-7-31, V3.0.2, firmware for GD32F30x
 */
 
 /*
-    Copyright (c) 2024, GigaDevice Semiconductor Inc.
+    Copyright (c) 2025, GigaDevice Semiconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification, 
 are permitted provided that the following conditions are met:
@@ -42,57 +42,106 @@ static void usbd_int_suspend(usb_dev *udev);
 
 /*!
     \brief      handle USB high priority successful transfer event
-    \param[in]  udev: pointer to USB device instance
+    \param[in]  none
     \param[out] none
     \retval     none
 */
-void usbd_int_hpst(usb_dev *udev)
+void usbd_int_hpst(void)
 {
-    __IO uint16_t int_status = 0U;
+    uint16_t len, count;
+    usb_dev *udev = usbd_core.dev;
+    __IO uint16_t int_status = (uint16_t)USBD_INTF;
+    uint8_t ep_num = (uint8_t)(int_status & INTF_EPNUM);
+    uint32_t epcs = USBD_EPxCS(ep_num);
 
     /* wait till interrupts are not pending */
-    while((int_status = (uint16_t)USBD_INTF) & (uint16_t)INTF_STIF) {
-        /* get endpoint number */
-        uint8_t ep_num = (uint8_t)(int_status & INTF_EPNUM);
-
-        uint8_t transc_num = (uint8_t)TRANSC_UNKNOWN;
-
+    while((int_status & (uint16_t)INTF_STIF) && USBD_EP_DBL_BUF_GET(ep_num)) {
         if(int_status & INTF_DIR) {
+            usb_transc *transc = &udev->transc_out[ep_num];
+
             if(USBD_EPxCS(ep_num) & EPxCS_RX_ST) {
-                uint16_t count = 0U;
-
-                usb_transc *transc = &udev->transc_out[ep_num];
-
                 /* clear successful receive interrupt flag */
                 USBD_EP_RX_ST_CLEAR(ep_num);
 
-                count = udev->drv_handler->ep_read(transc->xfer_buf, ep_num, (uint8_t)EP_BUF_DBL);
+                /* get the number of bytes received by the endpoint */
+                count = usbd_ep_dbl_rx_count_get(ep_num);
 
-                user_buffer_free(ep_num, (uint8_t)DBUF_EP_OUT);
+                /* determine if it is the last packet of data to be received */
+                if(((transc->xfer_count + count) < transc->xfer_len) && (count == transc->max_len)) {
+                    /* not the last packet of data, must toggle TX_DTG bit, USBD prepare to receive the next OUT packet */
+                    user_buffer_free(ep_num, (uint8_t)DBUF_EP_OUT);
+                } else {
+                    /* the last packet of data, not toggle TX_DTG bit, prevent USBD from receiving the next OUT packet */
+                }
 
+                /* read data from USB RAM to user FIFO */
+                udev->drv_handler->ep_read(transc->xfer_buf, ep_num, (uint8_t)EP_BUF_DBL);
+
+                /* update transaction parameters */
                 transc->xfer_buf += count;
                 transc->xfer_count += count;
-                transc->xfer_len -= count;
 
-                if((0U == transc->xfer_len) || (count < transc->max_len)) {
-                    USBD_EP_RX_STAT_SET(ep_num, EPRX_NAK);
+                if((transc->xfer_count >= transc->xfer_len) || (count < transc->max_len)) {
+                    if(EP_ISO != (USBD_EPxCS(ep_num) & EPxCS_CTL)) {
+                        USBD_EP_RX_STAT_SET(ep_num, EPRX_NAK);
+                    } else {
+                        USBD_EP_RX_STAT_SET(ep_num, EPRX_DISABLED);
+                    }
 
-                    transc_num = (uint8_t)TRANSC_OUT;
+                    /* for the next reception, must toggle the TX_DTG bit */
+                    user_buffer_free(ep_num, (uint8_t)DBUF_EP_OUT);
+
+                    if(udev->ep_transc[ep_num][TRANSC_OUT]) {
+                        udev->ep_transc[ep_num][TRANSC_OUT](udev, ep_num);
+                    }
+                } else {
+                    /* continue to receive data */
                 }
             }
         } else {
+            usb_transc *transc = &udev->transc_in[ep_num];
+
             /* handle the in direction transaction */
             if(USBD_EPxCS(ep_num) & EPxCS_TX_ST) {
                 /* clear successful transmit interrupt flag */
                 USBD_EP_TX_ST_CLEAR(ep_num);
 
-                transc_num = (uint8_t)TRANSC_IN;
+                /* toggle RX_DTG bit */
+                user_buffer_free(ep_num, (uint8_t)DBUF_EP_IN);
+
+                /* update transaction parameter */
+                transc->xfer_packet_num--;
+
+                if(0U == transc->xfer_packet_num) {
+                    if(EP_ISO != (USBD_EPxCS(ep_num) & EPxCS_CTL)) {
+                        USBD_EP_TX_STAT_SET(ep_num, EPTX_NAK);
+                    } else {
+                        USBD_EP_TX_STAT_SET(ep_num, EPTX_DISABLED);
+                    }
+
+                    if(udev->ep_transc[ep_num][TRANSC_IN]) {
+                        udev->ep_transc[ep_num][TRANSC_IN](udev, ep_num);
+                    }
+                } else if(transc->xfer_packet_num > 1U) {
+                    len = USB_MIN(transc->xfer_len, transc->max_len);
+
+                    /* write data from user FIFO to USB RAM */
+                    udev->drv_handler->ep_dbl_write(transc->xfer_buf, ep_num, len, 0U);
+
+                    /* update transaction parameters */
+                    transc->xfer_buf += len;
+                    transc->xfer_len -= len;
+                    transc->xfer_count = len;
+                } else {
+                    /* no operation */
+                }
             }
         }
 
-        if((uint8_t)TRANSC_UNKNOWN != transc_num) {
-            udev->ep_transc[ep_num][transc_num](udev, ep_num);
-        }
+        /* update interrupt status and enpoint status */
+        int_status = (uint16_t)USBD_INTF;
+        ep_num = (uint8_t)(int_status & INTF_EPNUM);
+        epcs = USBD_EPxCS(ep_num);
     }
 }
 

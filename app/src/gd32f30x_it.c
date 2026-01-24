@@ -1,8 +1,6 @@
-
 #include "gd32f30x_it.h"
 #include "battery.h"
 #include "motors.h"
-
 
 // /*!
 //     \brief      this function handles NMI exception
@@ -35,9 +33,10 @@
 */
 void MemManage_Handler(void)
 {
-    /* if Memory Manage exception occurs, go to infinite loop */
-    while (1){
-    }
+  /* if Memory Manage exception occurs, go to infinite loop */
+  while (1)
+  {
+  }
 }
 
 // /*!
@@ -109,17 +108,18 @@ void MemManage_Handler(void)
 // }
 
 /*!
-    \brief      this function handles ADC0_1 exception 
+    \brief      this function handles ADC0_1 exception
     \param[in]  none
     \param[out] none
     \retval     none
 */
 void ADC0_1_IRQHandler(void)
 {
-    if(adc_interrupt_flag_get(ADC0,ADC_INT_FLAG_WDE)){
-        adc_interrupt_flag_clear(ADC0,ADC_INT_FLAG_WDE);
-        BATTERY_AnalogWatchdogIRQ();
-    }
+  if (adc_interrupt_flag_get(ADC0, ADC_INT_FLAG_WDE))
+  {
+    adc_interrupt_flag_clear(ADC0, ADC_INT_FLAG_WDE);
+    BATTERY_AnalogWatchdogIRQ();
+  }
 }
 
 /*!
@@ -130,10 +130,11 @@ void ADC0_1_IRQHandler(void)
 */
 void EXTI5_9_IRQHandler(void)
 {
-    if(RESET != exti_interrupt_flag_get(EXTI_8)) {
-        exti_interrupt_flag_clear(EXTI_8);
-        BATTERY_ExtlineIRQ();
-    }
+  if (RESET != exti_interrupt_flag_get(EXTI_8))
+  {
+    exti_interrupt_flag_clear(EXTI_8);
+    BATTERY_ExtlineIRQ();
+  }
 }
 
 /*!
@@ -144,11 +145,12 @@ void EXTI5_9_IRQHandler(void)
 */
 void TIMER2_IRQHandler(void)
 {
-    // clear interrupt request to enable next run
-    if (timer_interrupt_flag_get(TIMER2, TIMER_INT_FLAG_UP) != RESET) {
-        timer_interrupt_flag_clear(TIMER2, TIMER_INT_FLAG_UP);
-        BATTERY_TimerIRQ();
-    }
+  // clear interrupt request to enable next run
+  if (timer_interrupt_flag_get(TIMER2, TIMER_INT_FLAG_UP) != RESET)
+  {
+    timer_interrupt_flag_clear(TIMER2, TIMER_INT_FLAG_UP);
+    BATTERY_TimerIRQ();
+  }
 }
 
 /*!
@@ -157,11 +159,11 @@ void TIMER2_IRQHandler(void)
     \param[out] none
     \retval     none
 */
-void  DMA0_Channel5_IRQHandler(void)
+void DMA0_Channel5_IRQHandler(void)
 {
-    if(RESET != dma_interrupt_flag_get(DMA0, DMA_CH5, DMA_INT_FLAG_FTF)) {
-        dma_interrupt_flag_clear(DMA0, DMA_CH5, DMA_INT_FLAG_G);
-        MOTORS_DMARxIRQ();
-    }
-
+  if (RESET != dma_interrupt_flag_get(DMA0, DMA_CH5, DMA_INT_FLAG_FTF))
+  {
+    dma_interrupt_flag_clear(DMA0, DMA_CH5, DMA_INT_FLAG_G);
+    MOTORS_DMARxIRQ();
+  }
 }
