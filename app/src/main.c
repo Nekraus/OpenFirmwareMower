@@ -51,10 +51,10 @@ void tx_application_define(void *first_unused_memory)
   /* Allocate the stack for thread 0.  */
   tx_byte_allocate(&byte_pool, (VOID **)&pointer, AZURE_THREAD_STACK_SIZE, TX_NO_WAIT);
 
-  // /* Create the main thread.  */
-  // tx_thread_create(&microros_thread, "microros_thread", MICROROS_App, 0,
-  //                  pointer, AZURE_THREAD_STACK_SIZE,
-  //                  1, 1, TX_NO_TIME_SLICE, TX_AUTO_START);
+  /* Create the main thread.  */
+  tx_thread_create(&microros_thread, "microros_thread", MICROROS_App, 0,
+                   pointer, AZURE_THREAD_STACK_SIZE,
+                   1, 1, TX_NO_TIME_SLICE, TX_AUTO_START);
 
   if (tx_byte_allocate(&byte_pool, (VOID **)&pointer,
                        1024, TX_NO_WAIT) != TX_SUCCESS)

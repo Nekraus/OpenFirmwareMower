@@ -8,7 +8,9 @@
 /* +-----------------------------------------------------------------------+ */
 /* |                               HEADER                                  | */
 /* +-----------------------------------------------------------------------+ */
-#include "../include/adc.h"
+#include "sensor_msgs/msg/battery_state.h"
+#include "tx_api.h"
+#include "adc.h"
 
 /* +-----------------------------------------------------------------------+ */
 /* |                            TYPEDEFS                                   | */
@@ -31,6 +33,14 @@ uint16_t adc2_value[2];
 uint16_t
 adc0_channel_sample(uint8_t channel);
 uint16_t adc2_channel_sample(uint8_t channel);
+
+// MICROROS variables
+extern rcl_publisher_t battery_publisher;
+extern bool microros_started;
+#define BATTERY_SAMPLING_RATE 5UL
+#define BATTERY_SAMPLE_PERIOD_TICKS (uint32_t)(TX_TIMER_TICKS_PER_SECOND / BATTERY_SAMPLING_RATE)
+uint32_t previous_battery_tick;
+#define BATT_PRESENT_VOLTAGE 1.0f
 /* +-----------------------------------------------------------------------+ */
 /* |                         Prototype FUNCTIONS                           | */
 /* +-----------------------------------------------------------------------+ */
@@ -48,20 +58,47 @@ void ADC_App(ULONG thread_input)
 
   adc_Init();
 
+  // wait that microros communication is up and running
+  while (!microros_started)
+  {
+    tx_thread_sleep((ULONG)(1 * TX_TIMER_TICKS_PER_SECOND));
+  }
+
+  static sensor_msgs__msg__BatteryState battery_msg = {};
+
+  battery_msg.header.frame_id.data = "battery";
+  battery_msg.header.frame_id.size = 7;
+  previous_battery_tick = tx_time_get();
   while (1)
   {
-    // printf("Charger Voltage: %d (%1.2fV)\n", adc0_value[0], adc0_value[0]* 6.0 * 3.3f / 4095.f);
-    // printf("Temperature : %d (%1.2fV)\n", adc0_value[1], adc0_value[1] * 3.3f / 4095.f);
-    printf("Battery Voltage: %d (%1.2fV)\n", adc0_value[2], adc0_value[2] * 10 * 3.3f / 4095.f);
-    // printf(" DS: %d (%1.2fV)\n", adc0_value[3], adc0_value[3] * 3.3f / 4095.f);
-    // printf(" DS bis: %d (%1.2fV)\n", adc0_value[7], adc0_value[7] * 3.3f / 4095.f);
-    printf(" Discharge current: %d (%1.2fV)\n", adc0_value[4], adc0_value[4] * 3.3f / 4095.f / 5.f / 0.025f);
-    // printf(" Charge current: %d (%1.2fV)\n", adc0_value[5], adc0_value[5] * 3.3f / 4095.f /20.f/0.025f);
-    printf(" Mower Motor current: %d (%1.2fV)\n", adc0_value[6], adc0_value[6] * 3.3f / 4095.f / 0.24f);
-    printf(" Right Motor current: %d (%1.2fV)\n", adc2_value[0], adc2_value[0] * 3.3f / 4095.f / 0.24f);
-    printf(" Left Motor current: %d (%1.2fV)\n", adc2_value[1], adc2_value[1] * 3.3f / 4095.f / 0.24f);
+    // printf("Charger Voltage: %d (%1.2fV)\n", adc0_value[0], adc0_value[0]* 6.0 * 3.3f / 4096.0f);
+    // printf("Temperature : %d (%1.2fV)\n", adc0_value[1], adc0_value[1] * 3.3f / 4096.0f);
+    printf("Battery Voltage: %d (%1.2fV)\n", adc0_value[2], adc0_value[2] * 10 * 3.3f / 4096.0f);
+    // printf(" DS: %d (%1.2fV)\n", adc0_value[3], adc0_value[3] * 3.3f / 4096.0f);
+    // printf(" DS bis: %d (%1.2fV)\n", adc0_value[7], adc0_value[7] * 3.3f / 4096.0f);
+    printf(" Discharge current: %d (%1.2fV)\n", adc0_value[4], adc0_value[4] * 3.3f / 4096.0f / 5.f / 0.025f);
+    // printf(" Charge current: %d (%1.2fV)\n", adc0_value[5], adc0_value[5] * 3.3f / 4096.0f /20.f/0.025f);
+    printf(" Mower Motor current: %d (%1.2fV)\n", adc0_value[6], adc0_value[6] * 3.3f / 4096.0f / 0.24f);
+    printf(" Right Motor current: %d (%1.2fV)\n", adc2_value[0], adc2_value[0] * 3.3f / 4096.0f / 0.24f);
+    printf(" Left Motor current: %d (%1.2fV)\n", adc2_value[1], adc2_value[1] * 3.3f / 4096.0f / 0.24f);
     // printf("\n");
-    tx_thread_sleep(TX_TIMER_TICKS_PER_SECOND);
+
+    int64_t ns = rmw_uros_epoch_nanos();
+    battery_msg.header.stamp.sec = ns / 1000000000;
+    battery_msg.header.stamp.nanosec = ns % 1000000000;
+    battery_msg.voltage = adc0_value[2] * 10 * 3.3f / 4096.0f;
+    battery_msg.present = battery_msg.voltage > BATT_PRESENT_VOLTAGE;
+    if (adc0_value[4]) // if discharging
+    {
+      battery_msg.current = -adc0_value[4] * 3.3f / 4096.0f / 5.f / 0.025f;
+    }
+    else // if charging
+    {
+      battery_msg.current = adc0_value[5] * 3.3f / 4096.0f / 20.f / 0.025f;
+    }
+    rcl_publish(&battery_publisher, &battery_msg, NULL);
+    thread_sleepUntil(&previous_battery_tick, BATTERY_SAMPLE_PERIOD_TICKS);
+    previous_battery_tick = tx_time_get();
   }
 }
 /* +-----------------------------------------------------------------------+ */
@@ -126,6 +163,8 @@ void adc_timer_config(void)
 
   timer_initpara.prescaler = clk_src / 1000000 - 1; /*1Mhz*/
   timer_initpara.period = 999;                      /* 1kHz, 1ms*/
+  // timer_initpara.prescaler = 8399;
+  // timer_initpara.period = 9999;
   timer_initpara.repetitioncounter = 0;
   timer_initpara.clockdivision = TIMER_CKDIV_DIV1;
   timer_initpara.counterdirection = TIMER_COUNTER_UP;
@@ -244,6 +283,8 @@ void adc_dma_config(void)
   dma_data_parameter.priority = DMA_PRIORITY_HIGH;
   dma_init(DMA0, DMA_CH0, &dma_data_parameter);
 
+  dma_circulation_enable(DMA0, DMA_CH0);
+
   /* ADC DMA_channel configuration */
   dma_deinit(DMA1, DMA_CH4);
 
@@ -259,6 +300,7 @@ void adc_dma_config(void)
   dma_data_parameter.priority = DMA_PRIORITY_HIGH;
   dma_init(DMA1, DMA_CH4, &dma_data_parameter);
 
+  dma_circulation_enable(DMA1, DMA_CH4);
   /* enable DMA channel */
   dma_channel_enable(DMA0, DMA_CH0);
   dma_channel_enable(DMA1, DMA_CH4);

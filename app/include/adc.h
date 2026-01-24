@@ -1,14 +1,15 @@
 /*
- * adc.h 
+ * adc.h
  *
- *  Created on: 07/07/2025 
- *      Author: Bruno Lecornu 
+ *  Created on: 07/07/2025
+ *      Author: Bruno Lecornu
  */
 
 #ifndef ADC_H
 #define ADC_H
 
 #include "main.h"
+#include <rmw_microros/rmw_microros.h>
 /* +-----------------------------------------------------------------------+ */
 /* |                        CONSTANTES / MACROS                            | */
 /* +-----------------------------------------------------------------------+ */

@@ -1,10 +1,11 @@
 #include "microros.h"
 
 rcl_publisher_t imu_publisher;
-rcl_publisher_t test_publisher;
+rcl_publisher_t battery_publisher;
 bool microros_started = false;
 
-static char imu_topic[] = "/imu/data_raw";
+static char imu_topic[] = "imu/data_raw";
+static char battery_topic[] = "power";
 
 void MICROROS_App(ULONG parameter)
 {
@@ -46,12 +47,19 @@ void MICROROS_App(ULONG parameter)
     epoch_sync = rmw_uros_sync_session(1000);
   } while ((epoch_sync != RMW_RET_OK) && (retries-- >= 0));
 
-  // create publisher
+  // create IMU publisher
   res = rclc_publisher_init_best_effort(
       &imu_publisher,
       &mower_node,
       ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Imu),
       imu_topic);
+
+  // create Battery publisher
+  res = rclc_publisher_init_best_effort(
+      &battery_publisher,
+      &mower_node,
+      ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, BatteryState),
+      battery_topic);
 
   // // create subscriber
   // rcl_subscription_t subscriber;
@@ -92,5 +100,6 @@ void MICROROS_App(ULONG parameter)
   // Free resources.
   // (void)!rcl_subscription_fini(&subscriber, &mower_node);
   (void)!rcl_publisher_fini(&imu_publisher, &mower_node);
+  (void)!rcl_publisher_fini(&battery_publisher, &mower_node);
   (void)!rcl_node_fini(&mower_node);
 }
